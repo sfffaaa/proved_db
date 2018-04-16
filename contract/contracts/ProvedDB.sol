@@ -30,8 +30,6 @@ contract ProvedDB {
 //	  }
 
     function Retrieve(string id) public constant returns (bool exist, string data) {
-		exist = false;
-		data = "";
 		if (false == proved_map[id].is_exist) {
 			return;
 		}
