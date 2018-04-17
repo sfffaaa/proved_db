@@ -2,13 +2,24 @@
 # encoding: utf-8
 
 import unittest
+import os
 import sys
+import errno
 sys.path.append('src')
 from mydb import MyDB
 
 
-class TestMyDBMethods(unittest.TestCase):
+def _unlink_silence(path):
+    try:
+        os.unlink(path)
+        return True
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return True
+    return False
 
+
+class TestMyDBSupportTypes(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -16,24 +27,28 @@ class TestMyDBMethods(unittest.TestCase):
         pass
 
     def testNotSupportTypes(self):
-        pass_error = False
-        try:
-            MyDB('test')
-        except Exception as e:
-            if 'type not in support_types' in str(e):
-                pass_error = True
-        self.assertTrue(pass_error)
+        self.assertRaisesRegex(OSError, 'type not in support_types', MyDB, 'test')
 
-    def testJsonCreateEntry(self):
+
+class TestMyDBJsonMethods(unittest.TestCase):
+    _JSON_PATH = 'test.json'
+
+    def setUp(self):
+        _unlink_silence(self._JSON_PATH)
+
+    def tearDown(self):
+        _unlink_silence(self._JSON_PATH)
+
+    def testCreateEntry(self):
         self.assertTrue(False)
 
-    def testJsonUpdateEntry(self):
+    def testUpdateEntry(self):
         self.assertTrue(False)
 
-    def testJsonDeleteEntry(self):
+    def testDeleteEntry(self):
         self.assertTrue(False)
 
-    def testJsonSelectEntry(self):
+    def testSelectEntry(self):
         self.assertTrue(False)
 
 
