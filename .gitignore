@@ -1,3 +1,5 @@
 *.pyc
 *.sw*
 contract/build/
+contract/tmp/
+backend/etc/
