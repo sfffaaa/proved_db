@@ -3,3 +3,4 @@
 contract/build/
 contract/tmp/
 backend/etc/
+backend/testcase/etc/

@@ -26,7 +26,7 @@ def _DeploySmartContract(contract_path, file_ipc):
     abi = _GetBuildContractJsonFileAttribute(contract_path, 'abi')
     bytecode = _GetBuildContractJsonFileAttribute(contract_path, 'bytecode')
     contract = w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 910000})
+    tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 1000000})
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     w3.miner.start(1)
     retry_time = 0
@@ -59,9 +59,9 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
         json.dump(json_data, f)
 
 
-if __name__ == '__main__':
+def deploy(config_path=CONFIG_PATH):
     config = configparser.ConfigParser()
-    config.read(CONFIG_PATH)
+    config.read(config_path)
 
     print('==== Compile smart contract ====')
     cmd = '(cd {0}; truffle compile)'.format(config.get('Deploy', 'truffle_path'))
@@ -89,3 +89,14 @@ if __name__ == '__main__':
         print('    {0}: {1}'.format(k, v))
     print('Contract owner:')
     print('    owner: {0}'.format(contract_owner))
+
+
+def undeploy(config_path=CONFIG_PATH):
+    ''' Actually, smart contract cannot undeploy, but I need an function to remove unused intermediate file'''
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    os.unlink(config.get('Output', 'file_path'))
+
+
+if __name__ == '__main__':
+    deploy()
