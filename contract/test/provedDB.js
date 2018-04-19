@@ -1,5 +1,6 @@
 var ProvedDB = artifacts.require("ProvedDB");
-const Web3 = require("web3")
+const Web3 = require("web3");
+const BigNumber = require('bignumber.js');
 var NON_EXIST_KEY = "aabbccddeeff";
 var TEST_DATA = {
     'test01': ['hash1'],
@@ -42,7 +43,7 @@ function CheckExist(ret, checkKey, checkValue) {
     assert.equal(ret[1].toString(), checkValue, "key exist, so return value " + checkValue);
 }
 
-contract("ProvedDB", function(accounts) {
+contract("ProvedDBBasic", function(accounts) {
 
     it("Create, Retrieve, Delete, Retrieve", function() {
         var contract;
@@ -155,102 +156,150 @@ contract("ProvedDB", function(accounts) {
         assert.equal(await contract.CheckEntry.call(testKey, 'This is wrong data'),
                      false, 'It should not be pass due to the different data');
     });
+});
 
-    it("Delete all entry from end", async function() {
+function GetTestcaseKeyList(testKey) {
+    var testKeys = [];
+    for (var i = 0; i < TEST_DATA[testKey].length; i++) {
+        var testElement = TEST_DATA[testKey][i];
+        var key = Object.keys(testElement)[0];
+        testKeys.push(key);
+    }
+    return testKeys;
+};
+
+function GetTestcaseKey(testcase) {
+    return Object.keys(testcase)[0];
+};
+
+async function CheckOnchainKeyExist(contract, testKeys) {
+    var keysLength = await contract.GetTotalKeys.call();
+    assert.equal(keysLength.toNumber(), testKeys.length, 'key should be the same');
+    for (var j = 0; j < keysLength.toNumber(); j++) {
+        var keyName = await contract.GetKey.call(j);
+        assert.notEqual(testKeys.indexOf(keyName), -1, 'key should be found');
+    }
+}
+
+async function RetrieveExistChecking(contract, retrieveTestcase) {
+    var retrieveKey = GetTestcaseKey(retrieveTestcase);
+    var retrieveVal = retrieveTestcase[retrieveKey];
+    var retrieveExistData = await contract.Retrieve.call(retrieveKey);
+    CheckExist(retrieveExistData, retrieveKey, retrieveVal);
+}
+
+async function RetrieveNotExistChecking(contract, testElement) {
+    var key = Object.keys(testElement)[0];
+    var retrieveNoExistData = await contract.Retrieve.call(key);
+    CheckNotExist(retrieveNoExistData);
+}
+
+async function DeleteChecking(contract, key) {
+    await contract.Delete(key);
+    var retrieveNoExistData = await contract.Retrieve.call(key);
+    assert.equal(retrieveNoExistData[0], false, 'key is deleted');
+    assert.equal(await contract.CheckEntry.call(key, ''),
+                 true, 'Cannot find the key, but compare with empty data, so should pass');
+}
+
+contract("ProvedDBDeleteFromEndCheck", function(accounts) {
+    it("Delete all entry from end + check", async function() {
         var testKey = "test05";
+        
+        var testKeys = GetTestcaseKeyList(testKey);
         var contract  = await ProvedDB.deployed();
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
             var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
+            var key = GetTestcaseKey(testElement);
             await contract.Create(key, testElement[key]);
+
+            var keysLength = await contract.GetTotalKeys.call();
+            assert.equal(keysLength.toNumber(), i + 1,
+                         'key length should be the same');
         }
+        await CheckOnchainKeyExist(contract, testKeys);
+
         for (var i = TEST_DATA[testKey].length - 1; i >= 0; i--) {
-            var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
-            await contract.Delete(key);
-            var retrieveNoExistData = await contract.Retrieve.call(key);
-            assert.equal(retrieveNoExistData[0], false, 'key is deleted');
-            assert.equal(await contract.CheckEntry.call(key, ''),
-                         true, 'Cannot find the key, but compare with empty data, so should pass');
+            var key = GetTestcaseKey(TEST_DATA[testKey][i]);
+            await DeleteChecking(contract, key);
 
             for (var j = 0; j < i; j++) {
-                var retrieveTestCase = TEST_DATA[testKey][j];
-                var retrieveKey = Object.keys(retrieveTestCase)[0];
-                var retrieveExistData = await contract.Retrieve.call(retrieveKey);
-                assert.equal(retrieveExistData[0], true, 'key should exist');
-                assert.equal(retrieveExistData[1], retrieveTestCase[retrieveKey], 'key should exist');
+                await RetrieveExistChecking(contract, TEST_DATA[testKey][j]);
+            }
+            testKeys.splice(testKeys.indexOf(key), 1);
+            var keysLength = await contract.GetTotalKeys.call();
+            for (var j = 0; j < keysLength.toNumber(); j++) {
+                var keyName = await contract.GetKey.call(j);
+                assert.notEqual(testKeys.indexOf(keyName), -1, 'key should be found');
             }
         }
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
-            var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
+            var key = GetTestcaseKey(TEST_DATA[testKey][i]);
             var retrieveNoExistData = await contract.Retrieve.call(key);
             assert.equal(retrieveNoExistData[0], false, 'key is deleted');
             assert.equal(await contract.CheckEntry.call(key, ''),
                          true, 'Cannot find the key, but compare with empty data, so should pass');
 
         }
+        var keysLength = await contract.GetTotalKeys.call();
+        assert.equal(keysLength.toNumber(), 0,
+                     'key length should be the same');
     });
-
-    it("Delete all entry from front", async function() {
+});
+ 
+contract("ProvedDBDeleteFromFrontCheck", function(accounts) {
+    it("Delete all entry from front + check", async function() {
         var testKey = "test06";
+
+        var testKeys = GetTestcaseKeyList(testKey);
+
         var contract  = await ProvedDB.deployed();
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
             var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
+            var key = GetTestcaseKey(testElement);
             await contract.Create(key, testElement[key]);
         }
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
-            var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
-            await contract.Delete(key);
-            var retrieveNoExistData = await contract.Retrieve.call(key);
-            assert.equal(retrieveNoExistData[0], false, 'key is deleted');
-            assert.equal(await contract.CheckEntry.call(key, ''),
-                         true, 'Cannot find the key, but compare with empty data, so should pass');
+            var key = GetTestcaseKey(TEST_DATA[testKey][i]);
+            await DeleteChecking(contract, key);
 
             for (var j = TEST_DATA[testKey].length - 1; j > i; j--) {
-                var retrieveTestCase = TEST_DATA[testKey][j];
-                var retrieveKey = Object.keys(retrieveTestCase)[0];
-                var retrieveExistData = await contract.Retrieve.call(retrieveKey);
-                assert.equal(retrieveExistData[0], true, 'key should exist');
-                assert.equal(retrieveExistData[1], retrieveTestCase[retrieveKey], 'key should exist');
+                await RetrieveExistChecking(contract, TEST_DATA[testKey][j]);
             }
+ 
+            testKeys.splice(testKeys.indexOf(key), 1);
+            await CheckOnchainKeyExist(contract, testKeys);
         }
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
-            var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
-            var retrieveNoExistData = await contract.Retrieve.call(key);
-            assert.equal(retrieveNoExistData[0], false, 'key is deleted');
-            assert.equal(await contract.CheckEntry.call(key, ''),
-                         true, 'Cannot find the key, but compare with empty data, so should pass');
+            await RetrieveNotExistChecking(contract, TEST_DATA[testKey][i]);
         }
     });
-    it("Delete all entry from middle", async function() {
+});
+
+contract("ProvedDBDeleteFromMiddleCheck", function(accounts) {
+    it("Delete all entry from middle + check", async function() {
         var testKey = "test07";
+
+        var testKeys = GetTestcaseKeyList(testKey);
         var contract  = await ProvedDB.deployed();
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
             var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
+            var key = GetTestcaseKey(TEST_DATA[testKey][i]);
             await contract.Create(key, testElement[key]);
         }
         for (var i = 1; i < TEST_DATA[testKey].length - 1; i++) {
-            var testElement = TEST_DATA[testKey][i];
-            var key = Object.keys(testElement)[0];
-            await contract.Delete(key);
-            var retrieveNoExistData = await contract.Retrieve.call(key);
-            assert.equal(retrieveNoExistData[0], false, 'key is deleted');
-            assert.equal(await contract.CheckEntry.call(key, ''),
-                         true, 'Cannot find the key, but compare with empty data, so should pass');
+            var key = GetTestcaseKey(TEST_DATA[testKey][i]);
+            await DeleteChecking(contract, key);
+
+            testKeys.splice(testKeys.indexOf(key), 1);
+            await CheckOnchainKeyExist(contract, testKeys);
         }
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
             if (0 == i || 0 == TEST_DATA[testKey].length - 1) {
-                var retrieveTestCase = TEST_DATA[testKey][i];
-                var retrieveKey = Object.keys(retrieveTestCase)[0];
-                var retrieveExistData = await contract.Retrieve.call(retrieveKey);
-                assert.equal(retrieveExistData[0], true, 'key should exist');
-                assert.equal(retrieveExistData[1], retrieveTestCase[retrieveKey], 'key should exist');
+                await RetrieveExistChecking(contract, TEST_DATA[testKey][i]);
             }
         }
     });
 });
+
+

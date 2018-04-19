@@ -68,15 +68,13 @@ contract ProvedDB {
 		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
 		uint remove_idx = key_idxa1_map[key] - 1;
 		uint last_idx = keys.length - 1;
-		if (remove_idx == last_idx) {
-			keys.length--;
-			key_idxa1_map[key] = 0;
-		} else {
+		if (remove_idx != last_idx) {
 			string memory last_key = keys[last_idx];
 			keys[remove_idx] = last_key;
 			key_idxa1_map[last_key] = remove_idx + 1;
-			key_idxa1_map[key] = 0;
 		}
+		key_idxa1_map[key] = 0;
+		keys.length--;
 	}
 
 	function CheckEntry(string key, string val) public constant returns (bool) {
