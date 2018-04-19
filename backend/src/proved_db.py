@@ -49,10 +49,20 @@ class ProvedJsonDB(ProvedBaseDB):
             return self._data[key]
 
     def update(self, entry):
-        pass
+        if 1 != len(list(entry)):
+            raise IOError('input key should not more than one, {0}'.format(list(entry)))
+        if list(entry)[0] not in self._data:
+            raise IOError('unique key does not exist, {0}'.format(list(entry)))
+        self._data.update(entry)
+        with open(self._path, 'w') as f:
+            json.dump(self._data, f)
 
-    def delete(self, myid):
-        pass
+    def delete(self, key):
+        if key not in self._data:
+            return
+        del self._data[key]
+        with open(self._path, 'w') as f:
+            json.dump(self._data, f)
 
 
 class ProvedDB():
@@ -91,10 +101,18 @@ class ProvedDB():
         return db_data
 
     def update(self, entry):
-        pass
+        self._type_db.update(entry)
 
-    def delete(self, myid):
-        pass
+        key, val = list(entry)[0], self._onchain_handler.hash_entry(entry)
+        self._onchain_handler.update(key, val)
+
+        retrieve_data = self.retrieve(key)
+        if retrieve_data != entry[key]:
+            raise IOError('update fail...')
+
+    def delete(self, key):
+        self._type_db.delete(key)
+        self._onchain_handler.delete(key)
 
 
 if __name__ == '__main__':

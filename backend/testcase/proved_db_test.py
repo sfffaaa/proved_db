@@ -58,6 +58,16 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                 'mydata02': 'data02'
             }
         },
+        'testUpdateEntry': [{
+            'test01': {
+                'mydata01': 'data01',
+                'mydata02': 'data02'
+            }}, {
+            'test01': {
+                'mydata03': 'data03',
+                'mydata04': 'data04'
+            }}
+        ],
     }
 
     @classmethod
@@ -121,14 +131,59 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(exist, True, 'key is not on chain')
         self.assertEqual(data, val, 'data on chain is inconsistent {0} != {1}'.format(data, val))
 
-#     def testUpdateEntry(self):
-#         self.assertTrue(False)
-#
-#     def testDeleteEntry(self):
-#         self.assertTrue(False)
-#
-#     def testSelectEntry(self):
-#         self.assertTrue(False)
+    def testDeleteEntry(self):
+        testDB = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        data = self.TEST_DATA['testCreateEntry']
+        testDB.create(data)
+
+        key = list(data)[0]
+        testDB.delete(key)
+
+        data = testDB.retrieve(key)
+        self.assertEqual(data, '', 'data is deleted!')
+
+        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        val = onchain_handler.hash_entry(data)
+        exist, data = onchain_handler.retrieve(key)
+        self.assertEqual(exist, False, 'key is on chain')
+        self.assertEqual(data, '', 'data on chain is inconsistent {0} != {1}'.format(data, val))
+
+    def testDeleteNoEntry(self):
+        testDB = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        data = self.TEST_DATA['testCreateEntry']
+        key = list(data)[0]
+        testDB.delete(key)
+
+        data = testDB.retrieve(key)
+        self.assertEqual(data, '', 'data is deleted!')
+
+        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        val = onchain_handler.hash_entry(data)
+        exist, data = onchain_handler.retrieve(key)
+        self.assertEqual(exist, False, 'key is on chain')
+        self.assertEqual(data, '', 'data on chain is inconsistent {0} != {1}'.format(data, val))
+
+    def testUpdateNoEntry(self):
+        testDB = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        self.assertRaisesRegex(IOError, 'unique key does not exist',
+                               testDB.update, {'you should not pass': {'a': 'b'}})
+
+    def testUpdateEntry(self):
+        testDB = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        testDB.create(self.TEST_DATA['testUpdateEntry'][0])
+        testDB.update(self.TEST_DATA['testUpdateEntry'][1])
+
+        data = self.TEST_DATA['testUpdateEntry'][1]
+        retrieve_data = testDB.retrieve(list(data)[0])
+        check_data = data[list(data)[0]]
+        self.assertEqual(retrieve_data, check_data,
+                         'retrive should be the same data, {0} != {1}'.format(retrieve_data, check_data))
+
+        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        key, val = list(data)[0], onchain_handler.hash_entry(data)
+        exist, data = onchain_handler.retrieve(key)
+        self.assertEqual(exist, True, 'key is not on chain')
+        self.assertEqual(data, val, 'data on chain is inconsistent {0} != {1}'.format(data, val))
 
 
 if __name__ == '__main__':

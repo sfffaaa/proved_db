@@ -62,37 +62,27 @@ class OnChainHandler():
         print(tx_receipt)
         print('==== create finish ====')
 
-    # def UpdateWillToOnchain(public_key, encrypt_data):
-    #     print('==== UpdateWillToOnchain start ====')
-    #
-    #     file_ipc = _get_chain_config('Ethereum', 'file_ipc')
-    #     self._w3 = Web3(Web3.IPCProvider(file_ipc))
-    #
-    #     contract_info = _get_contract_info()
-    #     contract_abi = contract_info['abi']
-    #     contract_address = contract_info['address']
-    #
-    #     contract_inst = self._w3.eth.contract(contract_address,
-    #                                     abi=contract_abi,
-    #                                     ContractFactoryClass=ConciseContract)
-    #     tx_hash = contract_inst.Update(public_key, encrypt_data,
-    #                                    transact={'from': self._w3.eth.accounts[0]})
-    #
-    #     tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
-    #     self._w3.miner.start(1)
-    #     retry_time = 0
-    #     while not tx_receipt and retry_time < 10:
-    #         print('    wait for miner!')
-    #         time.sleep(my_config.MINER_WAIT_TIME)
-    #         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
-    #         retry_time += 1
-    #
-    #     self._w3.miner.stop()
-    #     if not tx_receipt:
-    #         raise IOError('still cannot get contract result')
-    #
-    #     print(tx_receipt)
-    #     print('==== UpdateWillToOnchain finish ====')
+    def update(self, key, val):
+        print('==== update start ====')
+        tx_hash = self._contract_inst.Update(key, val,
+                                             transact={'from': self._w3.eth.accounts[0],
+                                                       'gas': 1000000})
+
+        tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+        self._w3.miner.start(1)
+        retry_time = 0
+        while not tx_receipt and retry_time < 10:
+            print('    wait for miner!')
+            time.sleep(my_config.MINER_WAIT_TIME)
+            tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+            retry_time += 1
+
+        self._w3.miner.stop()
+        if not tx_receipt:
+            raise IOError('still cannot get contract result')
+
+        print(tx_receipt)
+        print('==== update finish ====')
 
     def retrieve(self, key):
         print('==== retrieve start ====')
@@ -101,38 +91,27 @@ class OnChainHandler():
         print('==== retrieve end ====')
         return (exist, data)
 
-    # def DeleteWillToOnchain(public_key):
-    #     print('==== DeleteWillToOnchain start ====')
-    #
-    #     file_ipc = _get_chain_config('Ethereum', 'file_ipc')
-    #     self._w3 = Web3(Web3.IPCProvider(file_ipc))
-    #
-    #     contract_info = _get_contract_info()
-    #     contract_abi = contract_info['abi']
-    #     contract_address = contract_info['address']
-    #
-    #     contract_inst = self._w3.eth.contract(contract_address,
-    #                                     abi=contract_abi,
-    #                                     ContractFactoryClass=ConciseContract)
-    #     tx_hash = contract_inst.Delete(public_key,
-    #                                    transact={'from': self._w3.eth.accounts[0]})
-    #
-    #     tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
-    #     self._w3.miner.start(1)
-    #     retry_time = 0
-    #     while not tx_receipt and retry_time < 10:
-    #         print('    wait for miner!')
-    #         time.sleep(my_config.MINER_WAIT_TIME)
-    #         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
-    #         retry_time += 1
-    #
-    #     self._w3.miner.stop()
-    #     if not tx_receipt:
-    #         raise IOError('still cannot get contract result')
-    #
-    #     print(tx_receipt)
-    #     print('==== DeleteWillToOnchain finish ====')
+    def delete(self, key):
+        print('==== deletestart ====')
+        tx_hash = self._contract_inst.Delete(key,
+                                             transact={'from': self._w3.eth.accounts[0],
+                                                       'gas': 1000000})
 
+        tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+        self._w3.miner.start(1)
+        retry_time = 0
+        while not tx_receipt and retry_time < 10:
+            print('    wait for miner!')
+            time.sleep(my_config.MINER_WAIT_TIME)
+            tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+            retry_time += 1
+
+        self._w3.miner.stop()
+        if not tx_receipt:
+            raise IOError('still cannot get contract result')
+
+        print(tx_receipt)
+        print('==== delete finish ====')
 
 if __name__ == '__main__':
     pass
