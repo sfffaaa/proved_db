@@ -113,4 +113,23 @@ contract("ProvedDB", function(accounts) {
         }
         assert.notEqual(err, undefined, "err should be occurs");
     });
+
+    it("Check without id", async function() {
+        var contract = await ProvedDB.deployed();
+        assert.equal(await contract.CheckEntry.call('you should not pass', ''),
+                     true, 'Cannot find the key, but compare with empty data, so should pass');
+        assert.equal(await contract.CheckEntry.call('you should not pass', 'you should no have data'),
+                     false, 'Cannot find the key, but compare with different data, so should not pass');
+    });
+
+    it("Create, Check", async function() {
+        var testKey = "test01";
+        var contract = await ProvedDB.deployed();
+        await contract.Create(testKey, TEST_DATA[testKey][0])
+        assert.equal(await contract.CheckEntry.call(testKey, TEST_DATA[testKey][0]),
+                     true, 'It should be pass due to the same data');
+        assert.equal(await contract.CheckEntry.call(testKey, 'This is wrong data'),
+                     false, 'It should not be pass due to the different data');
+    });
+
 });
