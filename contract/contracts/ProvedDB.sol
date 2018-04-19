@@ -13,63 +13,96 @@ contract ProvedDB {
 	}
 
     mapping(string => Record) proved_map;
+	string[] keys;
+	mapping(string => uint) key_idxa1_map;
 
     function ProvedDB() public {
     }
 
-    function Create(string id, string hash) public {
-		assert(false == proved_map[id].is_exist);
-		proved_map[id].is_exist = true;
-		proved_map[id].entries.push(Entry("create", hash));
+	function strcmp(string s1, string s2) private pure returns (bool) {
+		return keccak256(s1) == keccak256(s2);
+	}
+
+    function Create(string key, string hash) public {
+		assert(false == proved_map[key].is_exist);
+		assert(0 == key_idxa1_map[key]);
+
+		proved_map[key].is_exist = true;
+		proved_map[key].entries.push(Entry("create", hash));
+
+		keys.push(key);
+		key_idxa1_map[key] = keys.length;
     }
 
-	function CheckEntry(string id, string hash) public constant returns (bool) {
+    function Retrieve(string key) public constant returns (bool exist, string data) {
+		if (false == proved_map[key].is_exist) {
+			assert(0 == key_idxa1_map[key]);
+			return;
+		}
 
-		bytes32 hashHash = keccak256(hash);
+		assert(0 != proved_map[key].entries.length);
+		assert(0 != key_idxa1_map[key]);
+		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
 
+		uint entry_len = proved_map[key].entries.length - 1;
+		return (true, proved_map[key].entries[entry_len].hash_value);
+    }
+    
+    function Update(string key, string hash) public {
+		assert(true == proved_map[key].is_exist);
+		assert(0 != key_idxa1_map[key]);
+		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
+
+		proved_map[key].entries.push(Entry("update", hash));
+    }
+
+    function Delete(string key) public {
+		if (false == proved_map[key].is_exist) {
+			assert(0 == key_idxa1_map[key]);
+			return;
+		}
+		proved_map[key].is_exist = false;
+		delete proved_map[key].entries;
+
+		assert(0 != key_idxa1_map[key]);
+		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
+		uint remove_idx = key_idxa1_map[key] - 1;
+		uint last_idx = keys.length - 1;
+		if (remove_idx == last_idx) {
+			keys.length--;
+			key_idxa1_map[key] = 0;
+		} else {
+			string memory last_key = keys[last_idx];
+			keys[remove_idx] = last_key;
+			key_idxa1_map[last_key] = remove_idx + 1;
+			key_idxa1_map[key] = 0;
+		}
+	}
+
+	function CheckEntry(string key, string val) public constant returns (bool) {
 		bool exist = false;
 		string memory data = '';
-		(exist, data) = Retrieve(id);
+		(exist, data) = Retrieve(key);
 
 		if (false == exist) {
-			if (keccak256('') == hashHash) {
+			if (strcmp('', val)) {
 				return true;
 			} else {
 				return false;
 			}
 		}
 		
-		if (keccak256(data) == hashHash) {
+		if (strcmp(data, val)) {
 			return true;
 		}
 		return false;
 	}
-//
-//	  function GetCheckSegment(int idx) public constant returns (bool continued, string fragment) {
-//	  }
 
-    function Retrieve(string id) public constant returns (bool exist, string data) {
-		if (false == proved_map[id].is_exist) {
-			return;
-		}
+	function GetTotalKeys() public constant returns (uint) {
+		return keys.length;
+	}
 
-		assert(0 != proved_map[id].entries.length);
-
-		uint entry_len = proved_map[id].entries.length - 1;
-		exist = true;
-		data = proved_map[id].entries[entry_len].hash_value;
-    }
-    
-    function Update(string id, string hash) public {
-		assert(true == proved_map[id].is_exist);
-		proved_map[id].entries.push(Entry("update", hash));
-    }
-
-    function Delete(string id) public {
-		if (false == proved_map[id].is_exist) {
-			return;
-		}
-		proved_map[id].is_exist = false;
-		delete proved_map[id].entries;
-    }
+	function GetKey(uint idx) public constant returns (string) {
+		return keys[idx];
+	}
 }
