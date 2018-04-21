@@ -113,5 +113,12 @@ class OnChainHandler():
         print(tx_receipt)
         print('==== delete finish ====')
 
+    def check_entry(self, key, val):
+        print('==== check_entry start ====')
+        hash_val = self.hash_entry({key: val})
+        ret = self._contract_inst.CheckEntry(key, hash_val)
+        print('==== check_entry end ====')
+        return ret
+
 if __name__ == '__main__':
     pass

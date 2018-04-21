@@ -26,7 +26,7 @@ def _DeploySmartContract(contract_path, file_ipc):
     abi = _GetBuildContractJsonFileAttribute(contract_path, 'abi')
     bytecode = _GetBuildContractJsonFileAttribute(contract_path, 'bytecode')
     contract = w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 1000000})
+    tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 5000000})
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     w3.miner.start(1)
     retry_time = 0

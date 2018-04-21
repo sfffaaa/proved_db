@@ -20,6 +20,9 @@ class ProvedBaseDB():
     def delete(self, myid):
         pass
 
+    def check_entry(self, key, val):
+        pass
+
 
 class ProvedJsonDB(ProvedBaseDB):
     def __init__(self, path=''):
@@ -63,6 +66,13 @@ class ProvedJsonDB(ProvedBaseDB):
         del self._data[key]
         with open(self._path, 'w') as f:
             json.dump(self._data, f)
+
+    def check_entry(self, key, val):
+        if key not in self._data:
+            return False
+        if self._data[key] != val:
+            return False
+        return True
 
 
 class ProvedDB():
@@ -114,6 +124,15 @@ class ProvedDB():
         self._type_db.delete(key)
         self._onchain_handler.delete(key)
 
+    def check_entry(self, key, val):
+        if not self._type_db.check_entry(key, val):
+            return False
+        if not self._onchain_handler.check_entry(key, val):
+            return False
+        return True
+
+    def check_all_entries(self):
+        pass
 
 if __name__ == '__main__':
     ProvedDB(mytype='json')
