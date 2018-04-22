@@ -20,6 +20,9 @@ class ProvedBaseDB():
     def delete(self, myid):
         pass
 
+    def get_keys(self):
+        pass
+
     def check_entry(self, key, val):
         pass
 
@@ -73,6 +76,9 @@ class ProvedJsonDB(ProvedBaseDB):
         if self._data[key] != val:
             return False
         return True
+
+    def get_keys(self):
+        return list(self._data.keys())
 
 
 class ProvedDB():
@@ -132,7 +138,19 @@ class ProvedDB():
         return True
 
     def check_all_entries(self):
-        pass
+        data_keys = [_ for _ in self._type_db.get_keys()]
+        online_keys = [self._onchain_handler.get_key(idx)
+                       for idx in range(self._onchain_handler.get_keys_length())]
+
+        if set(data_keys) != set(online_keys):
+            return False
+
+        for key in data_keys:
+            data_val = self._type_db.retrieve(key)
+            if not self._onchain_handler.check_entry(key, data_val):
+                return False
+
+        return True
 
 if __name__ == '__main__':
     ProvedDB(mytype='json')

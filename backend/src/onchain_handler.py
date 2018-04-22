@@ -120,5 +120,17 @@ class OnChainHandler():
         print('==== check_entry end ====')
         return ret
 
+    def get_keys_length(self):
+        print('==== get_keys_length start ====')
+        ret = self._contract_inst.GetTotalKeys()
+        print('==== get_keys_length end ====')
+        return ret
+
+    def get_key(self, idx):
+        print('==== get_key start ====')
+        ret = self._contract_inst.GetKey(idx)
+        print('==== get_key end ====')
+        return ret
+
 if __name__ == '__main__':
     pass

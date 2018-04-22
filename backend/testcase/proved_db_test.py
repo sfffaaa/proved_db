@@ -73,6 +73,22 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                 'mydata01': 'data01',
                 'mydata02': 'data02'
             }
+        }],
+        'testCheckAllEntriesEntry': [{
+            'test06': {
+                'mydata01': 'data01',
+                'mydata02': 'data02'
+            }
+        }, {
+            'test07': {
+                'mydata03': 'data03',
+                'mydata04': 'data04'
+            }
+        }, {
+            'test08': {
+                'mydata05': 'data05',
+                'mydata06': 'data06'
+            }
         }]
     }
 
@@ -207,6 +223,21 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         ret = test_db.check_entry(now_key, now_val)
         self.assertEqual(ret, True, 'checking should pass')
 
+    def testCheckAllEntriesNoEntry(self):
+        deploy.deploy(_TEST_CONFIG)
+        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        self.assertEqual(test_db.check_all_entries(), True, 'There should no data to check')
+
+    def testCheckAllEntriesEntry(self):
+        deploy.deploy(_TEST_CONFIG)
+        test_key = 'testCheckAllEntriesEntry'
+        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        for test_case in self.TEST_DATA[test_key]:
+            test_db.create(test_case)
+        self.assertEqual(test_db.check_all_entries(), True, 'There should pass the checking')
+
+        test_db.delete(list(self.TEST_DATA[test_key][1])[0])
+        self.assertEqual(test_db.check_all_entries(), True, 'There should pass the checking')
 
 if __name__ == '__main__':
     unittest.main()
