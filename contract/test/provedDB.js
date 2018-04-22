@@ -173,7 +173,7 @@ function GetTestcaseKey(testcase) {
 };
 
 async function CheckOnchainKeyExist(contract, testKeys) {
-    var keysLength = await contract.GetTotalKeys.call();
+    var keysLength = await contract.GetKeysLength.call();
     assert.equal(keysLength.toNumber(), testKeys.length, 'key should be the same');
     for (var j = 0; j < keysLength.toNumber(); j++) {
         var keyName = await contract.GetKey.call(j);
@@ -213,7 +213,7 @@ contract("ProvedDBDeleteFromEndCheck", function(accounts) {
             var key = GetTestcaseKey(testElement);
             await contract.Create(key, testElement[key]);
 
-            var keysLength = await contract.GetTotalKeys.call();
+            var keysLength = await contract.GetKeysLength.call();
             assert.equal(keysLength.toNumber(), i + 1,
                          'key length should be the same');
         }
@@ -227,7 +227,7 @@ contract("ProvedDBDeleteFromEndCheck", function(accounts) {
                 await RetrieveExistChecking(contract, TEST_DATA[testKey][j]);
             }
             testKeys.splice(testKeys.indexOf(key), 1);
-            var keysLength = await contract.GetTotalKeys.call();
+            var keysLength = await contract.GetKeysLength.call();
             for (var j = 0; j < keysLength.toNumber(); j++) {
                 var keyName = await contract.GetKey.call(j);
                 assert.notEqual(testKeys.indexOf(keyName), -1, 'key should be found');
@@ -241,7 +241,7 @@ contract("ProvedDBDeleteFromEndCheck", function(accounts) {
                          true, 'Cannot find the key, but compare with empty data, so should pass');
 
         }
-        var keysLength = await contract.GetTotalKeys.call();
+        var keysLength = await contract.GetKeysLength.call();
         assert.equal(keysLength.toNumber(), 0,
                      'key length should be the same');
     });

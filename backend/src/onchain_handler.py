@@ -122,7 +122,7 @@ class OnChainHandler():
 
     def get_keys_length(self):
         print('==== get_keys_length start ====')
-        ret = self._contract_inst.GetTotalKeys()
+        ret = self._contract_inst.GetKeysLength()
         print('==== get_keys_length end ====')
         return ret
 

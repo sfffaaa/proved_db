@@ -96,7 +96,7 @@ contract ProvedDB {
 		return false;
 	}
 
-	function GetTotalKeys() public constant returns (uint) {
+	function GetKeysLength() public constant returns (uint) {
 		return keys.length;
 	}
 
