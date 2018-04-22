@@ -53,8 +53,10 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
         'abi': _GetBuildContractJsonFileAttribute(contract_path, 'abi'),
         'address': contract_detail['contractAddress'],
         'owner': contract_owner,
-        'detail': {k: v for k, v in contract_detail.items()}
+        # [TODO] Need to save or remove
+        # 'detail': {k: v for k, v in contract_detail.items()}
     }
+    print(json_data)
     with open(file_path, 'w') as f:
         json.dump(json_data, f)
 

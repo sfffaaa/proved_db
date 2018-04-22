@@ -1,5 +1,4 @@
 var ProvedDB = artifacts.require("ProvedDB");
-const Web3 = require("web3");
 const BigNumber = require('bignumber.js');
 var NON_EXIST_KEY = "aabbccddeeff";
 var TEST_DATA = {
@@ -35,12 +34,15 @@ var TEST_DATA = {
 
 function CheckNotExist(ret) {
     assert.equal(ret[0], false, "key not exist, so return the key not exist");
-    assert.equal(ret[1].toString(), "", "key not exist, so return empty data");
+    assert.equal(ret[1].toString(),
+                 0x0000000000000000000000000000000000000000000000000000000000000000,
+                 "key not exist, so return empty data");
 }
 
 function CheckExist(ret, checkKey, checkValue) {
     assert.equal(ret[0], true, "key exist, so return the key exist " + checkKey);
-    assert.equal(ret[1].toString(), checkValue, "key exist, so return value " + checkValue);
+    assert.equal(ret[1].toString(), web3.sha3(checkValue),
+                 "key exist, so return value " + checkValue);
 }
 
 contract("ProvedDBBasic", function(accounts) {

@@ -9,9 +9,10 @@ sys.path.append('src')
 from proved_db import ProvedDB
 from onchain_handler import OnChainHandler
 import deploy
+from web3 import Web3
 
 _TEST_CONFIG = 'testcase/etc/test_config.conf'
-
+ZERO_VALUE = '0x' + '0'*64
 
 def _unlink_silence(path):
     try:
@@ -114,10 +115,12 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         # Call solidity select for find hash is already on smart contract
 
         onchain_handler = OnChainHandler(_TEST_CONFIG)
-        key, val = list(data)[0], onchain_handler.hash_entry(data)
+        key = list(data)[0]
+        val = onchain_handler.hash_entry(data[key])
         exist, data = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
-        self.assertEqual(data, val, 'data on chain is inconsistent {0} != {1}'.format(data, val))
+        self.assertEqual(data, val,
+                         'data on chain is inconsistent {0} != {1}'.format(data, val))
 
     def testCreateNoIdEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -135,7 +138,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         onchain_handler = OnChainHandler(_TEST_CONFIG)
         exist, data = onchain_handler.retrieve('You should not exist!!!')
         self.assertEqual(exist, False, 'key not on chain')
-        self.assertEqual(data, '', "data doesn't exist also!")
+        self.assertEqual(data, ZERO_VALUE, "data doesn't exist also!")
 
     def testRetrieveEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -148,10 +151,12 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'retrive should be the same data, {0} != {1}'.format(retrieve_data, check_data))
 
         onchain_handler = OnChainHandler(_TEST_CONFIG)
-        key, val = list(data)[0], onchain_handler.hash_entry(data)
-        exist, data = onchain_handler.retrieve(key)
+        key = list(data)[0]
+        onchain_hash = onchain_handler.hash_entry(data[key])
+        exist, retrieve_hash = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
-        self.assertEqual(data, val, 'data on chain is inconsistent {0} != {1}'.format(data, val))
+        self.assertEqual(retrieve_hash, onchain_hash,
+                         'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, onchain_hash))
 
     def testDeleteEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -168,7 +173,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         val = onchain_handler.hash_entry(data)
         exist, data = onchain_handler.retrieve(key)
         self.assertEqual(exist, False, 'key is on chain')
-        self.assertEqual(data, '', 'data on chain is inconsistent {0} != {1}'.format(data, val))
+        self.assertEqual(data, ZERO_VALUE, 'data on chain is inconsistent {0} != {1}'.format(data, val))
 
     def testDeleteNoEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -180,10 +185,10 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(data, '', 'data is deleted!')
 
         onchain_handler = OnChainHandler(_TEST_CONFIG)
-        val = onchain_handler.hash_entry(data)
-        exist, data = onchain_handler.retrieve(key)
-        self.assertEqual(exist, False, 'key is on chain')
-        self.assertEqual(data, '', 'data on chain is inconsistent {0} != {1}'.format(data, val))
+        exist, retrieve_hash = onchain_handler.retrieve(key)
+        self.assertEqual(exist, False, 'key is not on chain')
+        self.assertEqual(retrieve_hash, ZERO_VALUE,
+                         'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, ZERO_VALUE))
 
     def testUpdateNoEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -203,10 +208,12 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'retrive should be the same data, {0} != {1}'.format(retrieve_data, check_data))
 
         onchain_handler = OnChainHandler(_TEST_CONFIG)
-        key, val = list(data)[0], onchain_handler.hash_entry(data)
-        exist, data = onchain_handler.retrieve(key)
+        key = list(data)[0]
+        check_hash = onchain_handler.hash_entry(data[key])
+        exist, retrieve_hash = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
-        self.assertEqual(data, val, 'data on chain is inconsistent {0} != {1}'.format(data, val))
+        self.assertEqual(retrieve_hash, check_hash,
+                         'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, check_hash))
 
     def testCheckEntryNoEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)

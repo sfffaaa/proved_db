@@ -3,7 +3,6 @@
 
 from web3 import Web3
 from web3.contract import ConciseContract
-import ethereum
 import configparser
 import json
 import os
@@ -38,11 +37,11 @@ class OnChainHandler():
         return contract_info
 
     def hash_entry(self, val):
-        return ethereum.utils.encode_hex(ethereum.utils.sha3(str(val)))
+        return Web3.toHex(Web3.sha3(text=str(val)))
 
     def create(self, key, val):
         print('==== create start ====')
-        tx_hash = self._contract_inst.Create(key, val,
+        tx_hash = self._contract_inst.Create(str(key), str(val),
                                              transact={'from': self._w3.eth.accounts[0],
                                                        'gas': 1000000})
 
@@ -64,7 +63,7 @@ class OnChainHandler():
 
     def update(self, key, val):
         print('==== update start ====')
-        tx_hash = self._contract_inst.Update(key, val,
+        tx_hash = self._contract_inst.Update(str(key), str(val),
                                              transact={'from': self._w3.eth.accounts[0],
                                                        'gas': 1000000})
 
@@ -89,11 +88,11 @@ class OnChainHandler():
 
         exist, data = self._contract_inst.Retrieve(key)
         print('==== retrieve end ====')
-        return (exist, data)
+        return (exist, Web3.toHex(data))
 
     def delete(self, key):
         print('==== deletestart ====')
-        tx_hash = self._contract_inst.Delete(key,
+        tx_hash = self._contract_inst.Delete(str(key),
                                              transact={'from': self._w3.eth.accounts[0],
                                                        'gas': 1000000})
 
@@ -115,8 +114,7 @@ class OnChainHandler():
 
     def check_entry(self, key, val):
         print('==== check_entry start ====')
-        hash_val = self.hash_entry({key: val})
-        ret = self._contract_inst.CheckEntry(key, hash_val)
+        ret = self._contract_inst.CheckEntry(str(key), str(val))
         print('==== check_entry end ====')
         return ret
 

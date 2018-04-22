@@ -4,7 +4,10 @@
 import os
 import json
 import my_config
+# [TODO] Maybe it can be move to web3
+import ethereum
 from onchain_handler import OnChainHandler
+ZERO_VALUE = '0x' + '0' * 64
 
 
 class ProvedBaseDB():
@@ -94,7 +97,8 @@ class ProvedDB():
 
     def create(self, entry):
         self._type_db.create(entry)
-        key, val = list(entry)[0], self._onchain_handler.hash_entry(entry)
+        key = list(entry)[0]
+        val = entry[key]
         self._onchain_handler.create(key, val)
 
         # use retrive to check it
@@ -104,26 +108,28 @@ class ProvedDB():
 
     def retrieve(self, key):
         db_data = self._type_db.retrieve(key)
-        onchain_exist, onchain_data = self._onchain_handler.retrieve(key)
+        onchain_exist, onchain_hash = self._onchain_handler.retrieve(key)
         if not onchain_exist:
-            if db_data or onchain_data:
+            if db_data or onchain_hash != ZERO_VALUE:
                 raise IOError('key is not exist, shouldn\'t have any data, {0} v.s. {1}'.
-                              format(onchain_data, db_data))
+                              format(onchain_hash, db_data))
         else:
-            db_hash = self._onchain_handler.hash_entry({key: db_data})
-            if onchain_data != db_hash:
+            db_hash = self._onchain_handler.hash_entry(db_data)
+            if ethereum.utils.encode_hex(onchain_hash) != ethereum.utils.encode_hex(db_hash):
                 raise IOError('hash value doens\'t consist, {0} v.s. {1}'.
-                              format(onchain_data, db_hash))
+                              format(ethereum.utils.encode_hex(onchain_hash),
+                                     ethereum.utils.encode_hex(db_hash)))
         return db_data
 
     def update(self, entry):
         self._type_db.update(entry)
 
-        key, val = list(entry)[0], self._onchain_handler.hash_entry(entry)
+        key = list(entry)[0]
+        val = entry[key]
         self._onchain_handler.update(key, val)
 
         retrieve_data = self.retrieve(key)
-        if retrieve_data != entry[key]:
+        if retrieve_data != val:
             raise IOError('update fail...')
 
     def delete(self, key):

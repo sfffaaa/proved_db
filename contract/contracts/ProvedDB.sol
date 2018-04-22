@@ -4,7 +4,7 @@ contract ProvedDB {
 
 	struct Entry {
 		string action;
-		string hash_value;
+		bytes32 hash_value;
 	}
 
 	struct Record {
@@ -23,18 +23,18 @@ contract ProvedDB {
 		return keccak256(s1) == keccak256(s2);
 	}
 
-    function Create(string key, string hash) public {
+    function Create(string key, string val) public {
 		assert(false == proved_map[key].is_exist);
 		assert(0 == key_idxa1_map[key]);
 
 		proved_map[key].is_exist = true;
-		proved_map[key].entries.push(Entry("create", hash));
+		proved_map[key].entries.push(Entry("create", keccak256(val)));
 
 		keys.push(key);
 		key_idxa1_map[key] = keys.length;
     }
 
-    function Retrieve(string key) public constant returns (bool exist, string data) {
+    function Retrieve(string key) public constant returns (bool exist, bytes32 data) {
 		if (false == proved_map[key].is_exist) {
 			assert(0 == key_idxa1_map[key]);
 			return;
@@ -48,12 +48,12 @@ contract ProvedDB {
 		return (true, proved_map[key].entries[entry_len].hash_value);
     }
     
-    function Update(string key, string hash) public {
+    function Update(string key, string val) public {
 		assert(true == proved_map[key].is_exist);
 		assert(0 != key_idxa1_map[key]);
 		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
 
-		proved_map[key].entries.push(Entry("update", hash));
+		proved_map[key].entries.push(Entry("update", keccak256(val)));
     }
 
     function Delete(string key) public {
@@ -79,8 +79,8 @@ contract ProvedDB {
 
 	function CheckEntry(string key, string val) public constant returns (bool) {
 		bool exist = false;
-		string memory data = '';
-		(exist, data) = Retrieve(key);
+		bytes32 hash = '';
+		(exist, hash) = Retrieve(key);
 
 		if (false == exist) {
 			if (strcmp('', val)) {
@@ -90,7 +90,7 @@ contract ProvedDB {
 			}
 		}
 		
-		if (strcmp(data, val)) {
+		if (hash == keccak256(val)) {
 			return true;
 		}
 		return false;
