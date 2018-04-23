@@ -9,10 +9,10 @@ sys.path.append('src')
 from proved_db import ProvedDB
 from onchain_handler import OnChainHandler
 import deploy
-from web3 import Web3
 
 _TEST_CONFIG = 'testcase/etc/test_config.conf'
-ZERO_VALUE = '0x' + '0'*64
+ZERO_VALUE = '0x' + '0' * 64
+
 
 def _unlink_silence(path):
     try:

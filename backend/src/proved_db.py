@@ -4,8 +4,6 @@
 import os
 import json
 import my_config
-# [TODO] Maybe it can be move to web3
-import ethereum
 from onchain_handler import OnChainHandler
 ZERO_VALUE = '0x' + '0' * 64
 
@@ -115,10 +113,9 @@ class ProvedDB():
                               format(onchain_hash, db_data))
         else:
             db_hash = self._onchain_handler.hash_entry(db_data)
-            if ethereum.utils.encode_hex(onchain_hash) != ethereum.utils.encode_hex(db_hash):
+            if onchain_hash != db_hash:
                 raise IOError('hash value doens\'t consist, {0} v.s. {1}'.
-                              format(ethereum.utils.encode_hex(onchain_hash),
-                                     ethereum.utils.encode_hex(db_hash)))
+                              format(onchain_hash, db_hash))
         return db_data
 
     def update(self, entry):

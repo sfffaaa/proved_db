@@ -5,6 +5,7 @@ import configparser
 import os
 import json
 from web3 import Web3
+import hexbytes
 import time
 
 CONFIG_PATH = 'etc/config.conf'
@@ -53,10 +54,9 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
         'abi': _GetBuildContractJsonFileAttribute(contract_path, 'abi'),
         'address': contract_detail['contractAddress'],
         'owner': contract_owner,
-        # [TODO] Need to save or remove
-        # 'detail': {k: v for k, v in contract_detail.items()}
+        'detail': {k: Web3.toHex(v) if type(v) is hexbytes.main.HexBytes else v
+                   for k, v in contract_detail.items()}
     }
-    print(json_data)
     with open(file_path, 'w') as f:
         json.dump(json_data, f)
 
@@ -88,7 +88,10 @@ def deploy(config_path=CONFIG_PATH):
     print('==== Deploy finished ====')
     print('Contract detail:')
     for k, v in contract_detail.items():
-        print('    {0}: {1}'.format(k, v))
+        if type(v) is hexbytes.main.HexBytes:
+            print('    {0}: {1}'.format(k, Web3.toHex(v)))
+        else:
+            print('    {0}: {1}'.format(k, v))
     print('Contract owner:')
     print('    owner: {0}'.format(contract_owner))
 
