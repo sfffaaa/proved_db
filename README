@@ -1,1 +1,6 @@
-1. smart contract with sha3
+This project focuses on db and private chain. When user use create/update/delete,
+it will record hash into private chain automatically for improving trustness.
+It means user can request private chain for ensure the data in db isn't modified.
+
+However, the implementation doesn't finish. Right now, json file is used instead
+of database. So it's just an POC.
