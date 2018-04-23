@@ -28,7 +28,8 @@ var TEST_DATA = {
             'deleteFirstEntry03': 'hash03'
         }, {
             'deleteFirstEntry04': 'hash04'
-    }]
+    }],
+    'test08': ['hash1', 'hash2', 'hash3'],
 
 };
 
@@ -64,6 +65,9 @@ contract("ProvedDBBasic", function(accounts) {
             CheckNotExist(result);
         });
     });
+});
+
+contract("ProvedDBBasic2", function(accounts) {
 
     it("Create, Update, Retrieve, Update, Retrieve, Delete, Retrieve", function() {
         var contract;
@@ -108,6 +112,9 @@ contract("ProvedDBBasic", function(accounts) {
             CheckNotExist(result);
         });
     });
+});
+
+contract("ProvedDBBasic3", function(accounts) {
 
     it("Create but key exist", async function() {
         var contract = await ProvedDB.deployed();
@@ -148,6 +155,9 @@ contract("ProvedDBBasic", function(accounts) {
         assert.equal(await contract.CheckEntry.call('you should not pass', 'you should no have data'),
                      false, 'Cannot find the key, but compare with different data, so should not pass');
     });
+});
+
+contract("ProvedDBBasic4", function(accounts) {
 
     it("Create, Check", async function() {
         var testKey = "test04";
@@ -303,5 +313,44 @@ contract("ProvedDBDeleteFromMiddleCheck", function(accounts) {
         }
     });
 });
+
+contract("ProvedDBCheck", function(accounts) {
+    it("check hash", async function() {
+        var contract = await ProvedDB.deployed();
+        assert.equal(false,
+                     await contract.CheckHash.call(web3.sha3('you should not pass')),
+                     'result should be exist');
+    });
+
+    it("Create, Update, Update, Delete with check hash", async function() {
+        var testKey = "test08";
+        var contract = await ProvedDB.deployed();
+
+        await contract.Create(testKey, TEST_DATA[testKey][0]);
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][0])),
+                     'result should be exist');
+        await contract.Update(testKey, TEST_DATA[testKey][1]);
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][1])),
+                     'result should be exist');
+        await contract.Update(testKey, TEST_DATA[testKey][2]);
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][2])),
+                     'result should be exist');
+        await contract.Delete(testKey);
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][0])),
+                     'result should be exist');
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][1])),
+                     'result should be exist');
+        assert.equal(true,
+                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][2])),
+                     'result should be exist');
+    });
+
+});
+
 
 
