@@ -58,12 +58,12 @@ contract ProvedDB {
 
     function Delete(string key) public {
 		if (false == proved_map[key].is_exist) {
-			assert(0 == key_idxa1_map[key]);
 			return;
 		}
 		proved_map[key].is_exist = false;
-		delete proved_map[key].entries;
+		proved_map[key].entries.push(Entry("delete", keccak256("")));
 
+		// remove key
 		assert(0 != key_idxa1_map[key]);
 		assert(strcmp(keys[key_idxa1_map[key] - 1], key));
 		uint remove_idx = key_idxa1_map[key] - 1;
