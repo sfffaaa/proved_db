@@ -29,22 +29,22 @@ contract ProvedDB {
 		uint idx;
 	}
 
-    mapping(string => Record) _proved_map;
+    mapping(string => Record) _kv_hash_map;
 
 	string[] _keys;
 	mapping(string => uint) _key_idxa1_map;
 
-	mapping(bytes32 => ReverseRecord) _hash_reverse_map;
+	mapping(bytes32 => ReverseRecord) _kv_hash_reverse_map;
 
 	//[TODO] let owner to change this
 	uint _submit_period;
-	mapping(bytes32 => FinaliseEntry) _finalize_map;
+	mapping(bytes32 => FinaliseEntry) _finalize_hash_map;
 
 	//reverse find finalise group
-	mapping(bytes32 => bytes32) _hash_to_finalised_hash_map;
+	mapping(bytes32 => bytes32) _kv_hash_to_finalised_hash_map;
 
 	SubmitEntry[] _submit_list;
-	event submit_hash(bytes32 hash);
+	event submit_hash(bytes32 finalise_hash);
 
 	//[TODO] Need to check...
     //function constuctor(uint submit_period) public {
@@ -56,11 +56,11 @@ contract ProvedDB {
 		return keccak256(target_str) != keccak256(check_str);
 	}
 
-	function UpdateHashReverseMap(string input_key, bytes32 hash) private {
-		assert(false == _hash_reverse_map[hash].is_exist);
-		_hash_reverse_map[hash] = ReverseRecord(true,
-											    input_key,
-												_proved_map[input_key].entries.length - 1);
+	function UpdateHashReverseMap(string input_key, bytes32 kv_hash) private {
+		assert(false == _kv_hash_reverse_map[kv_hash].is_exist);
+		_kv_hash_reverse_map[kv_hash] = ReverseRecord(true,
+											       input_key,
+												   _kv_hash_map[input_key].entries.length - 1);
 	}
 
 	function IsNeedSubmit() private view returns (bool) {
@@ -75,73 +75,74 @@ contract ProvedDB {
 			}
 			hash += uint(_submit_list[i].entry.hash_value);
 		}
-		bytes32 final_hash = keccak256(hash);
-		_finalize_map[final_hash].is_exist = true;
-		_finalize_map[final_hash].is_finalise = false;
+		bytes32 finalise_hash = keccak256(hash);
+		_finalize_hash_map[finalise_hash].is_exist = true;
+		_finalize_hash_map[finalise_hash].is_finalise = false;
 		for (uint j = 0; j < _submit_list.length; j++) {
 			if (false == _submit_list[j].is_exist) {
 				continue;
 			}
-			_finalize_map[final_hash].entries.push(_submit_list[j].entry);
+			_finalize_hash_map[finalise_hash].entries.push(_submit_list[j].entry);
 		}
 
 		_submit_list.length = 0;
-		submit_hash(final_hash);
+		submit_hash(finalise_hash);
 		return true;
 	}
 
-	function Finalise(bytes32 hash) public {
-		assert(true == _finalize_map[hash].is_exist);
-		assert(false == _finalize_map[hash].is_finalise);
-		_finalize_map[hash].is_finalise = true;
-		for (uint i = 0; i < _finalize_map[hash].entries.length; i++) {
-			_hash_to_finalised_hash_map[_finalize_map[hash].entries[i].hash_value] = hash;
+	function Finalise(bytes32 finalise_hash) public {
+		assert(true == _finalize_hash_map[finalise_hash].is_exist);
+		assert(false == _finalize_hash_map[finalise_hash].is_finalise);
+		_finalize_hash_map[finalise_hash].is_finalise = true;
+		for (uint i = 0; i < _finalize_hash_map[finalise_hash].entries.length; i++) {
+			bytes32 kv_hash = _finalize_hash_map[finalise_hash].entries[i].hash_value;
+			_kv_hash_to_finalised_hash_map[kv_hash] = finalise_hash;
 		}
 	}
 
-	function GetFinalisedGroupEntriesLength(bytes32 hash) public view returns (bool, uint) {
-		if (0 == uint(_hash_to_finalised_hash_map[hash])) {
+	function GetFinalisedGroupEntriesLength(bytes32 kv_hash) public view returns (bool, uint) {
+		if (0 == uint(_kv_hash_to_finalised_hash_map[kv_hash])) {
 			return (false, 0);
 		}
-		bytes32 finalised_hash = _hash_to_finalised_hash_map[hash];
-		assert(true == _finalize_map[finalised_hash].is_exist);
-		assert(0 != _finalize_map[finalised_hash].entries.length);
-		return (true, _finalize_map[finalised_hash].entries.length);
+		bytes32 finalised_hash = _kv_hash_to_finalised_hash_map[kv_hash];
+		assert(true == _finalize_hash_map[finalised_hash].is_exist);
+		assert(0 != _finalize_hash_map[finalised_hash].entries.length);
+		return (true, _finalize_hash_map[finalised_hash].entries.length);
 	}
 
-	function GetFinalisedGroupEntry(bytes32 hash, uint idx) public view returns (bytes32) {
-		bytes32 finalised_hash = _hash_to_finalised_hash_map[hash];
+	function GetFinalisedGroupEntry(bytes32 kv_hash, uint idx) public view returns (bytes32) {
+		bytes32 finalised_hash = _kv_hash_to_finalised_hash_map[kv_hash];
 		assert(0 != uint(finalised_hash));
-		assert(true == _finalize_map[finalised_hash].is_exist);
-		assert(0 != _finalize_map[finalised_hash].entries.length);
-		assert(idx < _finalize_map[finalised_hash].entries.length);
-		return _finalize_map[finalised_hash].entries[idx].hash_value;
+		assert(true == _finalize_hash_map[finalised_hash].is_exist);
+		assert(0 != _finalize_hash_map[finalised_hash].entries.length);
+		assert(idx < _finalize_hash_map[finalised_hash].entries.length);
+		return _finalize_hash_map[finalised_hash].entries[idx].hash_value;
 	}
 
-	function GetFinaliseEntriesLength(bytes32 hash) public view returns (bool, bool, uint) {
-		if (false == _finalize_map[hash].is_exist) {
+	function GetFinaliseEntriesLength(bytes32 finalise_hash) public view returns (bool, bool, uint) {
+		if (false == _finalize_hash_map[finalise_hash].is_exist) {
 			return (false, false, 0);
 		}
-		if (false == _finalize_map[hash].is_finalise) {
-			return (true, false, _finalize_map[hash].entries.length);
+		if (false == _finalize_hash_map[finalise_hash].is_finalise) {
+			return (true, false, _finalize_hash_map[finalise_hash].entries.length);
 		}
-		return (true, true, _finalize_map[hash].entries.length);
+		return (true, true, _finalize_hash_map[finalise_hash].entries.length);
 	}
 
-	function GetFinaliseEntry(bytes32 hash, uint index) public view returns(bytes32) {
-		assert(true == _finalize_map[hash].is_exist);
-		assert(index < _finalize_map[hash].entries.length);
-		return _finalize_map[hash].entries[index].hash_value;
+	function GetFinaliseEntry(bytes32 finalise_hash, uint index) public view returns(bytes32) {
+		assert(true == _finalize_hash_map[finalise_hash].is_exist);
+		assert(index < _finalize_hash_map[finalise_hash].entries.length);
+		return _finalize_hash_map[finalise_hash].entries[index].hash_value;
 	}
 
     function Create(string input_key, string val) public {
-		assert(false == _proved_map[input_key].is_exist);
+		assert(false == _kv_hash_map[input_key].is_exist);
 		assert(0 == _key_idxa1_map[input_key]);
 
 		bytes32 hash = keccak256(val);
 		Entry memory entry = Entry("create", hash);
-		_proved_map[input_key].is_exist = true;
-		_proved_map[input_key].entries.push(entry);
+		_kv_hash_map[input_key].is_exist = true;
+		_kv_hash_map[input_key].entries.push(entry);
 		UpdateHashReverseMap(input_key, hash);
 		assert(true == CheckHash(hash));
 
@@ -155,28 +156,28 @@ contract ProvedDB {
     }
 
     function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
-		if (false == _proved_map[input_key].is_exist) {
+		if (false == _kv_hash_map[input_key].is_exist) {
 			assert(0 == _key_idxa1_map[input_key]);
 			return;
 		}
 
-		assert(0 != _proved_map[input_key].entries.length);
+		assert(0 != _kv_hash_map[input_key].entries.length);
 		assert(0 != _key_idxa1_map[input_key]);
 		assert(!strcmp(_keys[_key_idxa1_map[input_key] - 1], input_key));
 
-		uint entry_len = _proved_map[input_key].entries.length - 1;
-		return (true, _proved_map[input_key].entries[entry_len].hash_value);
+		uint entry_len = _kv_hash_map[input_key].entries.length - 1;
+		return (true, _kv_hash_map[input_key].entries[entry_len].hash_value);
     }
     
     function Update(string input_key, string val) public {
-		assert(true == _proved_map[input_key].is_exist);
+		assert(true == _kv_hash_map[input_key].is_exist);
 		assert(0 != _key_idxa1_map[input_key]);
 		assert(!strcmp(_keys[_key_idxa1_map[input_key] - 1], input_key));
 
 		
 		bytes32 hash = keccak256(val);
 		Entry memory entry = Entry("update", hash);
-		_proved_map[input_key].entries.push(entry);
+		_kv_hash_map[input_key].entries.push(entry);
 
 		UpdateHashReverseMap(input_key, hash);
 		assert(true == CheckHash(hash));
@@ -188,11 +189,11 @@ contract ProvedDB {
     }
 
     function Delete(string input_key) public {
-		if (false == _proved_map[input_key].is_exist) {
+		if (false == _kv_hash_map[input_key].is_exist) {
 			return;
 		}
-		_proved_map[input_key].is_exist = false;
-		_proved_map[input_key].entries.push(Entry("delete", keccak256("")));
+		_kv_hash_map[input_key].is_exist = false;
+		_kv_hash_map[input_key].entries.push(Entry("delete", keccak256("")));
 
 		// remove key
 		assert(0 != _key_idxa1_map[input_key]);
@@ -208,13 +209,13 @@ contract ProvedDB {
 		_keys.length--;
 	}
 
-	function CheckHash(bytes32 hash) public view returns (bool) {
-		ReverseRecord storage reverse_record = _hash_reverse_map[hash];
+	function CheckHash(bytes32 kv_hash) public view returns (bool) {
+		ReverseRecord storage reverse_record = _kv_hash_reverse_map[kv_hash];
 		if (true != reverse_record.is_exist) {
 			return false;
 		}
-		Record storage record = _proved_map[reverse_record.key];
-		if (hash != record.entries[reverse_record.idx].hash_value) {
+		Record storage record = _kv_hash_map[reverse_record.key];
+		if (kv_hash != record.entries[reverse_record.idx].hash_value) {
 			return false;
 		}
 		return true;

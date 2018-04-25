@@ -398,7 +398,7 @@ contract("ProvedDBSubmit", function(accounts) {
         assert.web3Event(result, {
             event: 'submit_hash',
             args: {
-                hash: checkHash
+                finalise_hash: checkHash
             }
         }, 'The event is emitted');
         await contract.Finalise(checkHash);
@@ -420,7 +420,7 @@ contract("ProvedDBSubmit", function(accounts) {
             assert.web3Event(result, {
                 event: 'submit_hash',
                 args: {
-                    hash: checkHash
+                    finalise_hash: checkHash
                 }
             }, 'The event is emitted');
             await contract.Finalise(checkHash);
