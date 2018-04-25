@@ -40,6 +40,9 @@ contract ProvedDB {
 	uint _submit_period;
 	mapping(bytes32 => FinaliseEntry) _finalize_map;
 
+	//reverse find finalise group
+	mapping(bytes32 => bytes32) _hash_to_finalised_hash_map;
+
 	SubmitEntry[] _submit_list;
 	event submit_hash(bytes32 hash);
 
@@ -91,6 +94,28 @@ contract ProvedDB {
 		assert(true == _finalize_map[hash].is_exist);
 		assert(false == _finalize_map[hash].is_finalise);
 		_finalize_map[hash].is_finalise = true;
+		for (uint i = 0; i < _finalize_map[hash].entries.length; i++) {
+			_hash_to_finalised_hash_map[_finalize_map[hash].entries[i].hash_value] = hash;
+		}
+	}
+
+	function GetFinalisedGroupEntriesLength(bytes32 hash) public view returns (bool, uint) {
+		if (0 == uint(_hash_to_finalised_hash_map[hash])) {
+			return (false, 0);
+		}
+		bytes32 finalised_hash = _hash_to_finalised_hash_map[hash];
+		assert(true == _finalize_map[finalised_hash].is_exist);
+		assert(0 != _finalize_map[finalised_hash].entries.length);
+		return (true, _finalize_map[finalised_hash].entries.length);
+	}
+
+	function GetFinalisedGroupEntry(bytes32 hash, uint idx) public view returns (bytes32) {
+		bytes32 finalised_hash = _hash_to_finalised_hash_map[hash];
+		assert(0 != uint(finalised_hash));
+		assert(true == _finalize_map[finalised_hash].is_exist);
+		assert(0 != _finalize_map[finalised_hash].entries.length);
+		assert(idx < _finalize_map[finalised_hash].entries.length);
+		return _finalize_map[finalised_hash].entries[idx].hash_value;
 	}
 
 	function GetFinaliseEntriesLength(bytes32 hash) public view returns (bool, bool, uint) {

@@ -48,6 +48,29 @@ function CheckExist(ret, checkKey, checkValue) {
                  "key exist, so return value " + checkValue);
 }
 
+function GetCheckHashSum(testEntries) {
+    //remove overflow part
+    var hashSum = BigNumber(0);
+    var threshold = BigNumber(2).exponentiatedBy(256);
+    for (var i = 0; i < testEntries.length; i++) {
+        var entryHash = BigNumber(web3.sha3(testEntries[i]));
+        hashSum = hashSum.plus(entryHash);
+        if (hashSum.isGreaterThanOrEqualTo(threshold)) {
+            hashSum = hashSum.minus(threshold);
+        }
+    }
+
+    //add right padding
+    var oriHexStr = web3.toHex(hashSum.toString());
+    var newHexStr = '';
+    if (66 === oriHexStr.length) {
+        newHexStr = oriHexStr;
+    } else {
+        newHexStr = '0x' + '0'.repeat(66 - oriHexStr.length) + oriHexStr.substring(2);
+    }
+    return web3.sha3(newHexStr, {encoding: 'hex'});
+}
+
 contract("ProvedDBBasic", function(accounts) {
 
     it("Create, Retrieve, Delete, Retrieve", function() {
@@ -353,29 +376,6 @@ contract("ProvedDBCheck", function(accounts) {
     });
 });
 
-function GetCheckHashSum(testEntries) {
-    //remove overflow part
-    var hashSum = BigNumber(0);
-    var threshold = BigNumber(2).exponentiatedBy(256);
-    for (var i = 0; i < testEntries.length; i++) {
-        var entryHash = BigNumber(web3.sha3(testEntries[i]));
-        hashSum = hashSum.plus(entryHash);
-        if (hashSum.isGreaterThanOrEqualTo(threshold)) {
-            hashSum = hashSum.minus(threshold);
-        }
-    }
-
-    //add right padding
-    var oriHexStr = web3.toHex(hashSum.toString());
-    var newHexStr = '';
-    if (66 === oriHexStr.length) {
-        newHexStr = oriHexStr;
-    } else {
-        newHexStr = '0x' + '0'.repeat(66 - oriHexStr.length) + oriHexStr.substring(2);
-    }
-    return web3.sha3(newHexStr, {encoding: 'hex'});
-}
-
 contract("ProvedDBSubmit", function(accounts) {
     it("empty finalise submit", async function() {
         var contract = await ProvedDB.deployed();
@@ -436,13 +436,6 @@ contract("ProvedDBSubmitChecking", function(accounts) {
         assert.equal(false, finaliseData[0], "hash doesn't exist");
         assert.equal(false, finaliseData[1], "hash doens't finalise");
         assert.equal(0, finaliseData[2].toNumber(), 'hash entry index should be zero');
-        var err = undefined;
-        try {
-            await contract.Finalise(nonExistKey);
-        } catch(error) {
-            err = error;
-        }
-        assert.notEqual(err, undefined, "err should be occurs");
     });
 
     it("Create, Update submit and finalise", async function() {
@@ -450,14 +443,8 @@ contract("ProvedDBSubmitChecking", function(accounts) {
         var contract = await ProvedDB.deployed();
         var checkHash = GetCheckHashSum(TEST_DATA[testKey]);
         await contract.Create(testKey, TEST_DATA[testKey][0]);
+        await contract.Update(testKey, TEST_DATA[testKey][1]);
 
-        var result = await contract.Update(testKey, TEST_DATA[testKey][1]);
-        assert.web3Event(result, {
-            event: 'submit_hash',
-            args: {
-                hash: checkHash
-            }
-        }, 'The event is emitted');
         var finaliseData = await contract.GetFinaliseEntriesLength(checkHash);
         assert.equal(true, finaliseData[0], 'hash should exist');
         assert.equal(false, finaliseData[1], "hash doens't finalise");
@@ -489,13 +476,7 @@ contract("ProvedDBSubmitChecking", function(accounts) {
         for (var i = 0; i < testEntries.length; i+=TEST_PERIOD) {
             var checkHash = GetCheckHashSum([testEntries[i], testEntries[i + 1]]);
             await contract.Create(testEntries[i], testEntries[i]);
-            var result = await contract.Create(testEntries[i + 1], testEntries[i + 1]);
-            assert.web3Event(result, {
-                event: 'submit_hash',
-                args: {
-                    hash: checkHash
-                }
-            }, 'The event is emitted');
+            await contract.Create(testEntries[i + 1], testEntries[i + 1]);
             await contract.Finalise(checkHash);
             var finaliseData = await contract.GetFinaliseEntriesLength(checkHash);
             assert.equal(true, finaliseData[0], 'hash should exist');
@@ -504,6 +485,67 @@ contract("ProvedDBSubmitChecking", function(accounts) {
             for (var j = 0; j < finaliseData[2].length; j++) {
                 var entryHash = await contract.GetFinaliseEntry(checkHash, j);
                 assert.equal(web3.sha(testEntries[i + j]), entryHash, "hash should be the same");
+            }
+        }
+    });
+});
+
+contract("ProvedDBFinaliseGroupChecking", function(accounts) {
+    it("empty finalise submit", async function() {
+        var contract = await ProvedDB.deployed();
+        var nonExistKey = 'You should not pass';
+        var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(nonExistKey);
+        assert.equal(false, finaliseGroupData[0], "hash doesn't exist");
+        assert.equal(0, finaliseGroupData[1].toNumber(), 'hash entry index should be zero');
+    });
+
+    it("Create, Update + check finalise group", async function() {
+        var testKey = "test09";
+        var contract = await ProvedDB.deployed();
+        var checkHash = GetCheckHashSum(TEST_DATA[testKey]);
+        await contract.Create(testKey, TEST_DATA[testKey][0]);
+        await contract.Update(testKey, TEST_DATA[testKey][1]);
+        var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(checkHash);
+        assert.equal(false, finaliseGroupData[0], 'hash should not exist');
+        assert.equal(0, finaliseGroupData[1].toNumber(), 'hash entry index should be zero');
+        await contract.Finalise(checkHash);
+        for (var i = 0; i < TEST_DATA[testKey].length; i++) {
+            var checkGroupHash = web3.sha3(TEST_DATA[testKey][i]);
+            var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(checkGroupHash);
+            assert.equal(true, finaliseGroupData[0], 'hash should exist');
+            assert.equal(TEST_DATA[testKey].length,
+                         finaliseGroupData[1].toNumber(),
+                         'hash entry index should be zero');
+            for (var j = 0; j < finaliseGroupData[1].length; j++) {
+                var entryHash = await contract.GetFinalisedGroupEntry(checkGroupHash, j);
+                assert.equal(web3.sha3(TEST_DATA[testKey][j]), entryHash, "hash should be the same");
+            }
+        }
+    });
+
+    it("Multiple create + check finalise group", async function() {
+        const TEST_PAIR_LENGTH = 50;
+        const TEST_PERIOD = 2;
+        var testEntries = [];
+        for (var i = 0; i < TEST_PAIR_LENGTH; i++) {
+            var val = '' + (i + 0);
+            testEntries.push(val);
+        }
+        var contract = await ProvedDB.deployed();
+        for (var i = 0; i < testEntries.length; i+=TEST_PERIOD) {
+            var checkHash = GetCheckHashSum([testEntries[i], testEntries[i + 1]]);
+            await contract.Create(testEntries[i], testEntries[i]);
+            await contract.Create(testEntries[i + 1], testEntries[i + 1]);
+            await contract.Finalise(checkHash);
+            for (var j = 0; j < TEST_PERIOD; j++) {
+                var checkGroupHash = web3.sha3(testEntries[i + j]);
+                var finaliseData = await contract.contract.GetFinalisedGroupEntriesLength(checkGroupHash);
+                assert.equal(true, finaliseData[0], 'hash should exist');
+                assert.equal(TEST_PERIOD, finaliseData[1].toNumber(), 'hash entry index should be zero');
+                for (var k = 0; k < finaliseData[1].toNumber(); k++) {
+                    var entryHash = await contract.GetFinalisedGroupEntry(checkGroupHash, k);
+                    assert.equal(web3.sha3(testEntries[i + k]), entryHash, "hash should be the same");
+                }
             }
         }
     });
