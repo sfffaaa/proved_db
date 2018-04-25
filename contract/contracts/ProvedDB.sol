@@ -93,6 +93,22 @@ contract ProvedDB {
 		_finalize_map[hash].is_finalise = true;
 	}
 
+	function GetFinaliseEntriesLength(bytes32 hash) public view returns (bool, bool, uint) {
+		if (false == _finalize_map[hash].is_exist) {
+			return (false, false, 0);
+		}
+		if (false == _finalize_map[hash].is_finalise) {
+			return (true, false, _finalize_map[hash].entries.length);
+		}
+		return (true, true, _finalize_map[hash].entries.length);
+	}
+
+	function GetFinaliseEntry(bytes32 hash, uint index) public view returns(bytes32) {
+		assert(true == _finalize_map[hash].is_exist);
+		assert(index < _finalize_map[hash].entries.length);
+		return _finalize_map[hash].entries[index].hash_value;
+	}
+
     function Create(string input_key, string val) public {
 		assert(false == _proved_map[input_key].is_exist);
 		assert(0 == _key_idxa1_map[input_key]);
