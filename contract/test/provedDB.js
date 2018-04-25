@@ -1,5 +1,7 @@
 var ProvedDB = artifacts.require("ProvedDB");
 const BigNumber = require('bignumber.js');
+require('truffle-test-utils').init();
+
 var NON_EXIST_KEY = "aabbccddeeff";
 var TEST_DATA = {
     'test01': ['hash1'],
@@ -30,7 +32,7 @@ var TEST_DATA = {
             'deleteFirstEntry04': 'hash04'
     }],
     'test08': ['hash1', 'hash2', 'hash3'],
-
+    'test09': ['hash1', 'hash2'],
 };
 
 function CheckNotExist(ret) {
@@ -348,6 +350,80 @@ contract("ProvedDBCheck", function(accounts) {
         assert.equal(true,
                      await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][2])),
                      'result should be exist');
+    });
+});
+
+contract("ProvedDBSubmit", function(accounts) {
+    it("empty finalise submit", async function() {
+        var contract = await ProvedDB.deployed();
+        var err = undefined;
+        try {
+            await contract.Finalise('I dont have any hash here');
+        } catch(error) {
+            err = error;
+        }
+        assert.notEqual(err, undefined, "err should be occurs");
+    });
+
+    function GetCheckHashSum(testEntries) {
+        //remove overflow part
+        var hashSum = BigNumber(0);
+        var threshold = BigNumber(2).exponentiatedBy(256);
+        for (var i = 0; i < testEntries.length; i++) {
+            var entryHash = BigNumber(web3.sha3(testEntries[i]));
+            hashSum = hashSum.plus(entryHash);
+            if (hashSum.isGreaterThanOrEqualTo(threshold)) {
+                hashSum = hashSum.minus(threshold);
+            }
+        }
+
+        //add right padding
+        var oriHexStr = web3.toHex(hashSum.toString());
+        var newHexStr = '';
+        if (66 === oriHexStr.length) {
+            newHexStr = oriHexStr;
+        } else {
+            newHexStr = '0x' + '0'.repeat(66 - oriHexStr.length) + oriHexStr.substring(2);
+        }
+        return web3.sha3(newHexStr, {encoding: 'hex'});
+    }
+
+    it("Create, Update", async function() {
+        var testKey = "test09";
+        var contract = await ProvedDB.deployed();
+        var checkHash = GetCheckHashSum(TEST_DATA[testKey]);
+        await contract.Create(testKey, TEST_DATA[testKey][0]);
+
+        var result = await contract.Update(testKey, TEST_DATA[testKey][1]);
+        assert.web3Event(result, {
+            event: 'submit_hash',
+            args: {
+                hash: checkHash
+            }
+        }, 'The event is emitted');
+        await contract.Finalise(checkHash);
+    });
+
+    it("Multiple create", async function() {
+        const TEST_PAIR_LENGTH = 50;
+        var testEntries = [];
+        for (var i = 0; i < TEST_PAIR_LENGTH; i++) {
+            var val = '' + (i + 0);
+            testEntries.push(val);
+        }
+        var contract = await ProvedDB.deployed();
+        for (var i = 0; i < testEntries.length; i+=2) {
+            var checkHash = GetCheckHashSum([testEntries[i], testEntries[i + 1]]);
+            await contract.Create(testEntries[i], testEntries[i]);
+            var result = await contract.Create(testEntries[i + 1], testEntries[i + 1]);
+            assert.web3Event(result, {
+                event: 'submit_hash',
+                args: {
+                    hash: checkHash
+                }
+            }, 'The event is emitted');
+            await contract.Finalise(checkHash);
+        }
     });
 
 });
