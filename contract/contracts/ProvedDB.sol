@@ -46,7 +46,7 @@ contract ProvedDB {
 	SubmitEntry[] _submit_list;
 	event submit_hash(bytes32 finalise_hash);
 
-	//[TODO] Need to check...
+	//[TODO] but right now I haven't upgrade my solc
     //function constuctor(uint submit_period) public {
     function ProvedDB() public {
 		_submit_period = 2;
