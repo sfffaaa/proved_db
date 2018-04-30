@@ -23,18 +23,10 @@ contract ProvedDB {
 		Entry[] entries;
 	}
 
-	struct ReverseRecord {
-		bool is_exist;
-		string key;
-		uint idx;
-	}
-
     mapping(string => Record) _kv_hash_map;
 
 	string[] _keys;
 	mapping(string => uint) _key_idxa1_map;
-
-	mapping(bytes32 => ReverseRecord) _kv_hash_reverse_map;
 
 	//[TODO] let owner to change this
 	uint _submit_period;
@@ -54,13 +46,6 @@ contract ProvedDB {
 
 	function strcmp(string target_str, string check_str) private pure returns (bool) {
 		return keccak256(target_str) != keccak256(check_str);
-	}
-
-	function UpdateHashReverseMap(string input_key, bytes32 kv_hash) private {
-		assert(false == _kv_hash_reverse_map[kv_hash].is_exist);
-		_kv_hash_reverse_map[kv_hash] = ReverseRecord(true,
-											       input_key,
-												   _kv_hash_map[input_key].entries.length - 1);
 	}
 
 	function IsNeedSubmit() private view returns (bool) {
@@ -143,8 +128,6 @@ contract ProvedDB {
 		Entry memory entry = Entry("create", hash);
 		_kv_hash_map[input_key].is_exist = true;
 		_kv_hash_map[input_key].entries.push(entry);
-		UpdateHashReverseMap(input_key, hash);
-		assert(true == CheckHash(hash));
 
 		_keys.push(input_key);
 		_key_idxa1_map[input_key] = _keys.length;
@@ -179,9 +162,6 @@ contract ProvedDB {
 		Entry memory entry = Entry("update", hash);
 		_kv_hash_map[input_key].entries.push(entry);
 
-		UpdateHashReverseMap(input_key, hash);
-		assert(true == CheckHash(hash));
-
 		_submit_list.push(SubmitEntry(true, entry));
 		if (IsNeedSubmit()) {
 			assert(true == Submit());
@@ -209,18 +189,6 @@ contract ProvedDB {
 		_keys.length--;
 	}
 
-	function CheckHash(bytes32 kv_hash) public view returns (bool) {
-		ReverseRecord storage reverse_record = _kv_hash_reverse_map[kv_hash];
-		if (true != reverse_record.is_exist) {
-			return false;
-		}
-		Record storage record = _kv_hash_map[reverse_record.key];
-		if (kv_hash != record.entries[reverse_record.idx].hash_value) {
-			return false;
-		}
-		return true;
-	}
-
 	function CheckEntry(string input_key, string val) public constant returns (bool) {
 		bool exist = false;
 		bytes32 hash = '';
@@ -237,7 +205,6 @@ contract ProvedDB {
 		if (hash == keccak256(val)) {
 			return true;
 		}
-		assert(true == CheckHash(hash));
 		return false;
 	}
 

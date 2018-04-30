@@ -339,43 +339,6 @@ contract("ProvedDBDeleteFromMiddleCheck", function(accounts) {
     });
 });
 
-contract("ProvedDBCheck", function(accounts) {
-    it("check hash", async function() {
-        var contract = await ProvedDB.deployed();
-        assert.equal(false,
-                     await contract.CheckHash.call(web3.sha3('you should not pass')),
-                     'result should be exist');
-    });
-
-    it("Create, Update, Update, Delete with check hash", async function() {
-        var testKey = "test08";
-        var contract = await ProvedDB.deployed();
-
-        await contract.Create(testKey, TEST_DATA[testKey][0]);
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][0])),
-                     'result should be exist');
-        await contract.Update(testKey, TEST_DATA[testKey][1]);
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][1])),
-                     'result should be exist');
-        await contract.Update(testKey, TEST_DATA[testKey][2]);
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][2])),
-                     'result should be exist');
-        await contract.Delete(testKey);
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][0])),
-                     'result should be exist');
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][1])),
-                     'result should be exist');
-        assert.equal(true,
-                     await contract.CheckHash.call(web3.sha3(TEST_DATA[testKey][2])),
-                     'result should be exist');
-    });
-});
-
 contract("ProvedDBSubmit", function(accounts) {
     it("empty finalise submit", async function() {
         var contract = await ProvedDB.deployed();
@@ -549,5 +512,12 @@ contract("ProvedDBFinaliseGroupChecking", function(accounts) {
             }
         }
     });
+});
 
+contract("ProvedDBCheckValRepeatFail", function(accounts) {
+    it("check value repeat", async function() {
+        var contract = await ProvedDB.deployed();
+        await contract.Create('test01', "{'mydata01': 'data01', 'mydata02': 'data02'}");
+        await contract.Create('test02', "{'mydata01': 'data01', 'mydata02': 'data02'}");
+    });
 });
