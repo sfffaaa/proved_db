@@ -246,5 +246,6 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         test_db.delete(list(self.TEST_DATA[test_key][1])[0])
         self.assertEqual(test_db.check_all_entries(), True, 'There should pass the checking')
 
+
 if __name__ == '__main__':
     unittest.main()

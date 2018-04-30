@@ -109,8 +109,8 @@ class ProvedDB():
         onchain_exist, onchain_hash = self._onchain_handler.retrieve(key)
         if not onchain_exist:
             if db_data or onchain_hash != ZERO_VALUE:
-                raise IOError('key is not exist, shouldn\'t have any data, {0} v.s. {1}'.
-                              format(onchain_hash, db_data))
+                raise IOError('key "{0}" is not exist, shouldn\'t have any data, {1} v.s. {2}'.
+                              format(key, onchain_hash, db_data))
         else:
             db_hash = self._onchain_handler.hash_entry(db_data)
             if onchain_hash != db_hash:
@@ -154,6 +154,7 @@ class ProvedDB():
                 return False
 
         return True
+
 
 if __name__ == '__main__':
     ProvedDB(mytype='json')
