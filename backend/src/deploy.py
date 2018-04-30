@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import configparser
 import os
 import json
 from web3 import Web3
 import hexbytes
 import time
+from config_handler import ConfigHandler
 
 CONFIG_PATH = 'etc/config.conf'
 
@@ -62,28 +62,28 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
 
 
 def deploy(config_path=CONFIG_PATH):
-    config = configparser.ConfigParser()
-    config.read(config_path)
+
+    config_handler = ConfigHandler(config_path)
 
     print('==== Compile smart contract ====')
-    cmd = '(cd {0}; truffle compile)'.format(config.get('Deploy', 'truffle_path'))
+    cmd = '(cd {0}; truffle compile)'.format(config_handler.get_chain_config('Deploy', 'truffle_path'))
     print('run command {0}'.format(cmd))
     os.system(cmd)
 
     print('==== Deploy started ====')
-    contract_path = _ComposeContractBuildPath(config.get('Deploy', 'truffle_build_path'),
-                                              config.get('Deploy', 'target_contract_name'))
+    contract_path = _ComposeContractBuildPath(config_handler.get_chain_config('Deploy', 'truffle_build_path'),
+                                              config_handler.get_chain_config('Deploy', 'target_contract_name'))
 
     assert os.path.isfile(contract_path), 'file compiled path {0} doesn\'t exist'.format(contract_path)
 
     print('==== Deploy contract to private chain  ====')
     contract_detail, contract_owner = _DeploySmartContract(contract_path,
-                                                           config.get('Ethereum', 'file_ipc'))
+                                                           config_handler.get_chain_config('Ethereum', 'file_ipc'))
 
     _DumpContractInfo(contract_path,
                       contract_detail,
                       contract_owner,
-                      config.get('Output', 'file_path'))
+                      config_handler.get_chain_config('Output', 'file_path'))
 
     print('==== Deploy finished ====')
     print('Contract detail:')
@@ -98,9 +98,8 @@ def deploy(config_path=CONFIG_PATH):
 
 def undeploy(config_path=CONFIG_PATH):
     ''' Actually, smart contract cannot undeploy, but I need an function to remove unused intermediate file'''
-    config = configparser.ConfigParser()
-    config.read(config_path)
-    os.unlink(config.get('Output', 'file_path'))
+    config_handler = ConfigHandler(config_path)
+    os.unlink(config_handler.get_chain_config('Output', 'file_path'))
 
 
 if __name__ == '__main__':

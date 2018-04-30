@@ -3,18 +3,18 @@
 
 from web3 import Web3
 from web3.contract import ConciseContract
-import configparser
 import json
 import os
 import my_config
+from config_handler import ConfigHandler
 import time
 
 
 class OnChainHandler():
 
     def __init__(self, config_path=my_config.CONFIG_PATH):
-        self._config_path = config_path
-        file_ipc = self._get_chain_config('Ethereum', 'file_ipc')
+        self._config_handler = ConfigHandler(config_path)
+        file_ipc = self._config_handler.get_chain_config('Ethereum', 'file_ipc')
         self._w3 = Web3(Web3.IPCProvider(file_ipc))
 
         contract_info = self._get_contract_info()
@@ -24,13 +24,8 @@ class OnChainHandler():
                                                     abi=contract_abi,
                                                     ContractFactoryClass=ConciseContract)
 
-    def _get_chain_config(self, section, key):
-        config = configparser.ConfigParser()
-        config.read(self._config_path)
-        return config.get(section, key)
-
     def _get_contract_info(self):
-        file_path = self._get_chain_config('Output', 'file_path')
+        file_path = self._config_handler.get_chain_config('Output', 'file_path')
         file_path = os.path.abspath(file_path)
         with open(file_path) as f:
             contract_info = json.load(f)
