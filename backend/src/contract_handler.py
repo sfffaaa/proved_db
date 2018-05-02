@@ -19,6 +19,9 @@ class ContractHandler():
         self._contract_inst = self._w3.eth.contract(contract_address,
                                                     abi=contract_abi,
                                                     ContractFactoryClass=ConciseContract)
+        # [TODO] Should change this instance (maybe compress with self._contract_inst)
+        self._contract_event_inst = self._w3.eth.contract(contract_address,
+                                                          abi=contract_abi)
 
     def get_w3(self):
         return self._w3

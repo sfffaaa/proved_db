@@ -155,6 +155,21 @@ class ProvedDB():
 
         return True
 
+    def get_finalise_entries_length(self, hash_sum):
+        return self._onchain_handler.get_finalise_entries_length(hash_sum)
+
+    def get_finalise_entry(self, hash_sum, idx):
+        return self._onchain_handler.get_finalise_entry(hash_sum, idx)
+
+    def finalise(self, hash_sum):
+        self._onchain_handler.finalise(hash_sum)
+
+    def get_finalised_group_entries_length(self, hash_sum):
+        return self._onchain_handler.get_finalised_group_entries_length(hash_sum)
+
+    def get_finalised_group_entry(self, hash_sum, idx):
+        return self._onchain_handler.get_finalised_group_entry(hash_sum, idx)
+
 
 if __name__ == '__main__':
     ProvedDB(mytype='json')

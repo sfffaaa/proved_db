@@ -468,9 +468,11 @@ contract("ProvedDBFinaliseGroupChecking", function(accounts) {
         var checkHash = GetCheckHashSum(TEST_DATA[testKey]);
         await contract.Create(testKey, TEST_DATA[testKey][0]);
         await contract.Update(testKey, TEST_DATA[testKey][1]);
-        var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(checkHash);
-        assert.equal(false, finaliseGroupData[0], 'hash should not exist');
-        assert.equal(0, finaliseGroupData[1].toNumber(), 'hash entry index should be zero');
+        for (var i = 0; i < TEST_DATA[testKey].length; i++) {
+            var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(TEST_DATA[testKey][i]);
+            assert.equal(false, finaliseGroupData[0], 'hash should not exist');
+            assert.equal(0, finaliseGroupData[1].toNumber(), 'hash entry index should be zero');
+        }
         await contract.Finalise(checkHash);
         for (var i = 0; i < TEST_DATA[testKey].length; i++) {
             var checkGroupHash = web3.sha3(TEST_DATA[testKey][i]);
@@ -499,6 +501,11 @@ contract("ProvedDBFinaliseGroupChecking", function(accounts) {
             var checkHash = GetCheckHashSum([testEntries[i], testEntries[i + 1]]);
             await contract.Create(testEntries[i], testEntries[i]);
             await contract.Create(testEntries[i + 1], testEntries[i + 1]);
+            for (var j = 0; j < TEST_PERIOD; j++) {
+                var finaliseGroupData = await contract.GetFinalisedGroupEntriesLength(testEntries[i + j]);
+                assert.equal(false, finaliseGroupData[0], 'hash should not exist');
+                assert.equal(0, finaliseGroupData[1].toNumber(), 'hash entry index should be zero');
+            }
             await contract.Finalise(checkHash);
             for (var j = 0; j < TEST_PERIOD; j++) {
                 var checkGroupHash = web3.sha3(testEntries[i + j]);
