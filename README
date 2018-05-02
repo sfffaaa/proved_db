@@ -1,5 +1,4 @@
-This project focuses on db and private chain. When user use create/update/delete,
-it will record hash into private chain automatically for improving trustness.
+This project focuses on db and private chain. When user use create/update/delete, it will record hash into private chain automatically for improving trustness.
 It means user can request private chain for ensure the data in db isn't modified.
 
 ------ Not Finish --------
@@ -10,11 +9,8 @@ Smart Contract
 2. Public chain
 
 Note:
-	1. The feature to use Reverse hash to find key is removed, because the value will
-		the same in different key. It can be solved by record all keys into
-		an array. However, skip it to implement backend first.
-	2. Private chain can be different blockchain implementation, such as Ethereum, NEO or
-		EOS. Right now, I just use ethereum as infrastructure.
+	1. The feature to use Reverse hash to find key is removed, because the value will the same in different key. It can be solved by record all keys into an array. However, skip it to implement backend first.
+	2. Private chain can be different blockchain implementation, such as Ethereum, NEO or EOS. Right now, I just use ethereum as infrastructure.
 	3. Because it is private chain, the gas comsumption isn't the most important concern here.
 
 Backend Implementation
@@ -29,5 +25,4 @@ Backend Implementation
 Note:
 	1. Due to tracing pyethereum and related python project in ethereum, I decided to use gevent as
 		asynchorize library.
-	2. Now json file is used instead traditional database due to the POC. It will be easy to change other
-		traditional database implementation.
+	2. Now json file is used instead traditional database due to the POC. It will be easy to change other traditional database implementation.
