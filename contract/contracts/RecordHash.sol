@@ -11,4 +11,8 @@ contract RecordHash {
 		_record_map[record_hash] = true;
 		record_over(record_hash);
 	}
+
+	function Get(bytes32 record_hash) public view returns(bool) {
+		return _record_map[record_hash];
+	}
 }

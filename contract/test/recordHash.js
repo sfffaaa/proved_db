@@ -14,4 +14,15 @@ contract("RecordHashBasicTest", function(accounts) {
             }
         }, 'The event is emitted');
     });
+
+    it("Record hash", async function() {
+        var contract = await RecordHash.deployed();
+        var hash = web3.sha3('show me the money, again');
+        var checkResult = await contract.Get(hash);
+        assert.equal(false, checkResult, 'Two result should not be the same');
+        await contract.Record(hash);
+        checkResult = await contract.Get(hash);
+        assert.equal(true, checkResult, 'Two result should be the same');
+    });
+
 });
