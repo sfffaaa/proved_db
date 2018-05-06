@@ -6,6 +6,8 @@ import my_config
 import time
 from contract_handler import ContractHandler
 
+GAS_SPENT = 1000000
+
 
 class OnChainHandler():
 
@@ -27,7 +29,7 @@ class OnChainHandler():
         print('==== create start ====')
         tx_hash = self._contract_inst.Create(str(key), str(val),
                                              transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': 1000000})
+                                                       'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -39,17 +41,16 @@ class OnChainHandler():
             retry_time += 1
 
         self._w3.miner.stop()
-        if not tx_receipt:
-            raise IOError('still cannot get contract result')
+        if self._check_transaction_meet_assert(tx_hash):
+            raise IOError('assert encounter..')
 
-        print(tx_receipt)
         print('==== create finish ====')
 
     def update(self, key, val):
         print('==== update start ====')
         tx_hash = self._contract_inst.Update(str(key), str(val),
                                              transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': 1000000})
+                                                       'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -61,10 +62,9 @@ class OnChainHandler():
             retry_time += 1
 
         self._w3.miner.stop()
-        if not tx_receipt:
-            raise IOError('still cannot get contract result')
+        if self._check_transaction_meet_assert(tx_hash):
+            raise IOError('assert encounter..')
 
-        print(tx_receipt)
         print('==== update finish ====')
 
     def retrieve(self, key):
@@ -78,7 +78,7 @@ class OnChainHandler():
         print('==== deletestart ====')
         tx_hash = self._contract_inst.Delete(str(key),
                                              transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': 1000000})
+                                                       'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -90,10 +90,9 @@ class OnChainHandler():
             retry_time += 1
 
         self._w3.miner.stop()
-        if not tx_receipt:
-            raise IOError('still cannot get contract result')
+        if self._check_transaction_meet_assert(tx_hash):
+            raise IOError('assert encounter..')
 
-        print(tx_receipt)
         print('==== delete finish ====')
 
     def check_entry(self, key, val):
@@ -133,7 +132,7 @@ class OnChainHandler():
         hash_arg = self.convert_to_bytes(hash_sum)
         tx_hash = self._contract_inst.Finalise(hash_arg,
                                                transact={'from': self._w3.eth.accounts[0],
-                                                         'gas': 1000000})
+                                                         'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -145,10 +144,9 @@ class OnChainHandler():
             retry_time += 1
 
         self._w3.miner.stop()
-        if not tx_receipt:
-            raise IOError('still cannot get contract result')
+        if self._check_transaction_meet_assert(tx_hash):
+            raise IOError('assert encounter..')
 
-        print(tx_receipt)
         print('==== dfinalise finish ====')
 
     def get_finalised_group_entries_length(self, hash_sum):
@@ -164,6 +162,15 @@ class OnChainHandler():
         ret = self._contract_inst.GetFinalisedGroupEntry(hash_arg, idx)
         print('==== get_finalised_group_entry end ====')
         return Web3.toHex(ret)
+
+    def _check_transaction_meet_assert(self, tx_hash):
+        tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
+        if not tx_receipt:
+            raise IOError('{0} receipt does not exist'.format(tx_receipt))
+        if tx_receipt.gasUsed == GAS_SPENT:
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':

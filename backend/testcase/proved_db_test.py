@@ -90,7 +90,19 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                 'mydata05': 'data05',
                 'mydata06': 'data06'
             }
-        }]
+        }],
+        'testDeleteEntry': {
+            'test09': {
+                'mydata01': 'data01',
+                'mydata02': 'data02'
+            }
+        },
+        'testDeleteNoEntry': {
+            'test10': {
+                'mydata01': 'data01',
+                'mydata02': 'data02'
+            }
+        },
     }
 
     @classmethod
@@ -160,7 +172,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
     def testDeleteEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
-        data = self.TEST_DATA['testCreateEntry']
+        data = self.TEST_DATA['testDeleteEntry']
         test_db.create(data)
 
         key = list(data)[0]
@@ -177,7 +189,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
     def testDeleteNoEntry(self):
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
-        data = self.TEST_DATA['testCreateEntry']
+        data = self.TEST_DATA['testDeleteNoEntry']
         key = list(data)[0]
         test_db.delete(key)
 
