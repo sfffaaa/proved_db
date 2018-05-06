@@ -13,7 +13,7 @@ class ProvedDBPrivateChainNode(gevent.Greenlet):
         self.callback_objs = callback_objs
         self.wait_time = wait_time
 
-        self._contract_handler = ContractHandler(config_path)
+        self._contract_handler = ContractHandler('ProvedDB', config_path)
         self._w3 = self._contract_handler.get_w3()
         self._contract_inst = self._contract_handler.get_contract()
         self._contract_event_inst = self._contract_handler._contract_event_inst

@@ -12,7 +12,7 @@ GAS_SPENT = 1000000
 class OnChainHandler():
 
     def __init__(self, config_path=my_config.CONFIG_PATH):
-        self._contract_handler = ContractHandler(config_path)
+        self._contract_handler = ContractHandler('ProvedDB', config_path)
         self._w3 = self._contract_handler.get_w3()
         self._contract_inst = self._contract_handler.get_contract()
 

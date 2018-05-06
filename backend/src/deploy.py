@@ -61,18 +61,10 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
         json.dump(json_data, f)
 
 
-def deploy(config_path=CONFIG_PATH):
-
-    config_handler = ConfigHandler(config_path)
-
-    print('==== Compile smart contract ====')
-    cmd = '(cd {0}; truffle compile)'.format(config_handler.get_chain_config('Deploy', 'truffle_path'))
-    print('run command {0}'.format(cmd))
-    os.system(cmd)
-
-    print('==== Deploy started ====')
+def _deploy_single_smart_contract(config_handler, contract_name):
+    print('==== Deploy started {0} ===='.format(contract_name))
     contract_path = _ComposeContractBuildPath(config_handler.get_chain_config('Deploy', 'truffle_build_path'),
-                                              config_handler.get_chain_config('Deploy', 'target_contract_name'))
+                                              contract_name)
 
     assert os.path.isfile(contract_path), 'file compiled path {0} doesn\'t exist'.format(contract_path)
 
@@ -80,12 +72,15 @@ def deploy(config_path=CONFIG_PATH):
     contract_detail, contract_owner = _DeploySmartContract(contract_path,
                                                            config_handler.get_chain_config('Ethereum', 'file_ipc'))
 
+    output_path = os.path.join(config_handler.get_chain_config('Output', 'file_path'),
+                               '{0}.json'.format(contract_name))
+
     _DumpContractInfo(contract_path,
                       contract_detail,
                       contract_owner,
-                      config_handler.get_chain_config('Output', 'file_path'))
+                      output_path)
 
-    print('==== Deploy finished ====')
+    print('==== Deploy finished {0} ===='.format(contract_name))
     print('Contract detail:')
     for k, v in contract_detail.items():
         if type(v) is hexbytes.main.HexBytes:
@@ -96,10 +91,28 @@ def deploy(config_path=CONFIG_PATH):
     print('    owner: {0}'.format(contract_owner))
 
 
+def deploy(config_path=CONFIG_PATH):
+
+    config_handler = ConfigHandler(config_path)
+
+    print('==== Compile smart contract ====')
+    cmd = '(cd {0}; truffle compile)'.format(config_handler.get_chain_config('Deploy', 'truffle_path'))
+    print('run command {0}'.format(cmd))
+    os.system(cmd)
+
+    contract_names = config_handler.get_chain_config('Deploy', 'target_contract_name')
+    for contract_name in contract_names.split(','):
+        _deploy_single_smart_contract(config_handler, contract_name)
+
+
 def undeploy(config_path=CONFIG_PATH):
     ''' Actually, smart contract cannot undeploy, but I need an function to remove unused intermediate file'''
     config_handler = ConfigHandler(config_path)
-    os.unlink(config_handler.get_chain_config('Output', 'file_path'))
+    contract_names = config_handler.get_chain_config('Deploy', 'target_contract_name')
+    for contract_name in contract_names.split(','):
+        contract_path = os.path.join(config_handler.get_chain_config('Output', 'file_path'),
+                                     '{0}.json'.format(contract_name))
+        os.unlink(contract_path)
 
 
 if __name__ == '__main__':
