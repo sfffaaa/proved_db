@@ -9,7 +9,7 @@ from contract_handler import ContractHandler
 GAS_SPENT = 1000000
 
 
-class OnChainHandler():
+class ProvedDBOnChainHandler():
 
     def __init__(self, config_path=my_config.CONFIG_PATH):
         self._contract_handler = ContractHandler('ProvedDB', config_path)

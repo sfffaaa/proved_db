@@ -4,7 +4,7 @@
 import os
 import json
 import my_config
-from onchain_handler import OnChainHandler
+from proved_db_onchain_handler import ProvedDBOnChainHandler
 ZERO_VALUE = '0x' + '0' * 64
 
 
@@ -91,7 +91,7 @@ class ProvedDB():
         if not any(mytype == _ for _ in self._support_types.keys()):
             raise IOError('{0} type not in support_types {1}'.format(mytype, self._support_types))
         self._type_db = self._support_types[mytype](path)
-        self._onchain_handler = OnChainHandler(config)
+        self._onchain_handler = ProvedDBOnChainHandler(config)
 
     def create(self, entry):
         self._type_db.create(entry)

@@ -7,7 +7,7 @@ import sys
 import errno
 sys.path.append('src')
 from proved_db import ProvedDB
-from onchain_handler import OnChainHandler
+from proved_db_onchain_handler import ProvedDBOnChainHandler
 import deploy
 
 _TEST_CONFIG = 'testcase/etc/test_config.conf'
@@ -126,7 +126,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         # Don't use select check here, so assume create is success here
         # Call solidity select for find hash is already on smart contract
 
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
         val = onchain_handler.hash_entry(data[key])
         exist, data = onchain_handler.retrieve(key)
@@ -147,7 +147,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertRaisesRegex(IOError, 'unique key already exist', test_db.create, data)
 
     def testRetrieveNoEntry(self):
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         exist, data = onchain_handler.retrieve('You should not exist!!!')
         self.assertEqual(exist, False, 'key not on chain')
         self.assertEqual(data, ZERO_VALUE, "data doesn't exist also!")
@@ -162,7 +162,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(retrieve_data, check_data,
                          'retrive should be the same data, {0} != {1}'.format(retrieve_data, check_data))
 
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
         onchain_hash = onchain_handler.hash_entry(data[key])
         exist, retrieve_hash = onchain_handler.retrieve(key)
@@ -181,7 +181,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         data = test_db.retrieve(key)
         self.assertEqual(data, '', 'data is deleted!')
 
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         val = onchain_handler.hash_entry(data)
         exist, data = onchain_handler.retrieve(key)
         self.assertEqual(exist, False, 'key is on chain')
@@ -196,7 +196,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         data = test_db.retrieve(key)
         self.assertEqual(data, '', 'data is deleted!')
 
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         exist, retrieve_hash = onchain_handler.retrieve(key)
         self.assertEqual(exist, False, 'key is not on chain')
         self.assertEqual(retrieve_hash, ZERO_VALUE,
@@ -219,7 +219,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(retrieve_data, check_data,
                          'retrive should be the same data, {0} != {1}'.format(retrieve_data, check_data))
 
-        onchain_handler = OnChainHandler(_TEST_CONFIG)
+        onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
         check_hash = onchain_handler.hash_entry(data[key])
         exist, retrieve_hash = onchain_handler.retrieve(key)
