@@ -3,7 +3,6 @@
 
 import gevent
 import my_config
-from web3 import Web3
 from contract_handler import ContractHandler
 from record_hash import RecordHash
 from proved_db import ProvedDB
@@ -75,12 +74,11 @@ class SubmitAndRecordChainNode(ProvedDBPrivateChainNode):
 
     def submitHashEventCallback(self, node, event):
         event_finalise_hash = event['args']['finalise_hash']
-        # [TODO] should let record/finalise allow byte code...
-        self._record_hash_mgr.record(Web3.toHex(event_finalise_hash))
+        self._record_hash_mgr.record(event_finalise_hash)
 
     def recordOverEventCallback(self, node, event):
         event_finalise_hash = event['args']['finalise_hash']
-        self._proved_db_mgr.finalise(Web3.toHex(event_finalise_hash))
+        self._proved_db_mgr.finalise(event_finalise_hash)
 
 
 if __name__ == '__main__':

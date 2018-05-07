@@ -4,6 +4,7 @@
 import my_config
 import time
 from contract_handler import ContractHandler
+from chain_utils import convert_to_bytes
 
 GAS_SPENT = 1000000
 
@@ -26,7 +27,7 @@ class RecordHashOnChainHandler():
 
     def record(self, input_hash):
         print('==== record start ====')
-        tx_hash = self._contract_inst.Record(str(input_hash),
+        tx_hash = self._contract_inst.Record(convert_to_bytes(input_hash),
                                              transact={'from': self._w3.eth.accounts[0],
                                                        'gas': GAS_SPENT})
 
@@ -47,7 +48,7 @@ class RecordHashOnChainHandler():
     def get(self, input_hash):
         print('==== get start ====')
 
-        exist = self._contract_inst.Get(str(input_hash))
+        exist = self._contract_inst.Get(convert_to_bytes(input_hash))
         print('==== get end ====')
         return exist
 

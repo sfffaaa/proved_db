@@ -5,6 +5,7 @@ from web3 import Web3
 import my_config
 import time
 from contract_handler import ContractHandler
+from chain_utils import convert_to_bytes
 
 GAS_SPENT = 1000000
 
@@ -15,12 +16,6 @@ class ProvedDBOnChainHandler():
         self._contract_handler = ContractHandler('ProvedDB', config_path)
         self._w3 = self._contract_handler.get_w3()
         self._contract_inst = self._contract_handler.get_contract()
-
-    def convert_to_bytes(self, val):
-        if val.startswith('0x'):
-            return Web3.toBytes(hexstr=val)
-        else:
-            return Web3.toBytes(text=val)
 
     def hash_entry(self, val):
         return Web3.toHex(Web3.sha3(text=str(val)))
@@ -115,21 +110,21 @@ class ProvedDBOnChainHandler():
 
     def get_finalise_entries_length(self, hash_sum):
         print('==== get_finalise_entries_length start ====')
-        hash_arg = self.convert_to_bytes(hash_sum)
+        hash_arg = convert_to_bytes(hash_sum)
         existed, finalised, length = self._contract_inst.GetFinaliseEntriesLength(hash_arg)
         print('==== get_finalise_entries_length end ====')
         return existed, finalised, length
 
     def get_finalise_entry(self, hash_sum, idx):
         print('==== get_finalise_entries_length start ====')
-        hash_arg = self.convert_to_bytes(hash_sum)
+        hash_arg = convert_to_bytes(hash_sum)
         ret = self._contract_inst.GetFinaliseEntry(hash_arg, idx)
         print('==== get_finalise_entries_length end ====')
         return ret
 
     def finalise(self, hash_sum):
         print('==== finalise start ====')
-        hash_arg = self.convert_to_bytes(hash_sum)
+        hash_arg = convert_to_bytes(hash_sum)
         tx_hash = self._contract_inst.Finalise(hash_arg,
                                                transact={'from': self._w3.eth.accounts[0],
                                                          'gas': GAS_SPENT})
@@ -151,14 +146,14 @@ class ProvedDBOnChainHandler():
 
     def get_finalised_group_entries_length(self, hash_sum):
         print('==== get_finalised_group_entries_length start ====')
-        hash_arg = self.convert_to_bytes(hash_sum)
+        hash_arg = convert_to_bytes(hash_sum)
         existed, length = self._contract_inst.GetFinalisedGroupEntriesLength(hash_arg)
         print('==== get_finalised_group_entries_length end ====')
         return existed, length
 
     def get_finalised_group_entry(self, hash_sum, idx):
         print('==== get_finalised_group_entry start ====')
-        hash_arg = self.convert_to_bytes(hash_sum)
+        hash_arg = convert_to_bytes(hash_sum)
         ret = self._contract_inst.GetFinalisedGroupEntry(hash_arg, idx)
         print('==== get_finalised_group_entry end ====')
         return Web3.toHex(ret)
