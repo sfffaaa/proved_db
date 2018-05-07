@@ -3,7 +3,10 @@
 
 import gevent
 import my_config
+from web3 import Web3
 from contract_handler import ContractHandler
+from record_hash import RecordHash
+from proved_db import ProvedDB
 
 
 class ProvedDBPrivateChainNode(gevent.Greenlet):
@@ -52,6 +55,32 @@ class ProvedDBPrivateChainNode(gevent.Greenlet):
                     callback_obj.recordOverEventCallback(self, event)
 
             gevent.sleep(self.wait_time)
+
+
+class SubmitAndRecordChainNode(ProvedDBPrivateChainNode):
+
+    def __init__(self,
+                 config_path=my_config.CONFIG_PATH,
+                 proved_db_callback_objs=[],
+                 record_hash_callback_objs=[],
+                 wait_time=3):
+        self._record_hash_mgr = RecordHash(config_path)
+        self._proved_db_mgr = ProvedDB(config_path, 'json')
+        proved_db_callback_objs = [self] + proved_db_callback_objs
+        record_hash_callback_objs = [self] + record_hash_callback_objs
+        super(SubmitAndRecordChainNode, self).__init__(config_path,
+                                                       proved_db_callback_objs,
+                                                       record_hash_callback_objs,
+                                                       wait_time)
+
+    def submitHashEventCallback(self, node, event):
+        event_finalise_hash = event['args']['finalise_hash']
+        # [TODO] should let record/finalise allow byte code...
+        self._record_hash_mgr.record(Web3.toHex(event_finalise_hash))
+
+    def recordOverEventCallback(self, node, event):
+        event_finalise_hash = event['args']['finalise_hash']
+        self._proved_db_mgr.finalise(Web3.toHex(event_finalise_hash))
 
 
 if __name__ == '__main__':
