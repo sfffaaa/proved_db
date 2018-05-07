@@ -8,8 +8,7 @@ from record_hash import RecordHash
 from record_hash_onchain_handler import RecordHashOnChainHandler
 import deploy
 from web3 import Web3
-
-_TEST_CONFIG = 'testcase/etc/test_config.conf'
+from test_utils import _TEST_CONFIG
 
 
 class TestRecordHashJsonMethods(unittest.TestCase):

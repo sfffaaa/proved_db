@@ -1,36 +1,15 @@
 import unittest
-import os
 import sys
-import errno
 sys.path.append('src')
 from proved_db import ProvedDB
 from record_hash import RecordHash
 import deploy
 from proved_db_private_node import ProvedDBPrivateChainNode
 from web3 import Web3
-
-_TEST_CONFIG = 'testcase/etc/test_config.conf'
-ZERO_VALUE = '0x' + '0' * 64
+from test_utils import calculate_submit_hash, get_db_path, unlink_silence, _TEST_CONFIG
 
 TEST_PAIR_LENGTH = 2
 TEST_PAIR_PERIOD = 2
-
-
-# [TODO] Extract to utils function
-def calculate_submit_hash(input_vals):
-    hash_sums = [Web3.toInt(Web3.sha3(text=str(val)))
-                 for val in input_vals]
-    return Web3.toHex(Web3.sha3(sum(hash_sums) & (2 ** 256 - 1)))
-
-
-def _unlink_silence(path):
-    try:
-        os.unlink(path)
-        return True
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return True
-    return False
 
 
 def show_log_data(node, event):
@@ -40,8 +19,7 @@ def show_log_data(node, event):
     node.kill()
 
 
-class TestPrivateNodeMethods(unittest.TestCase):
-    _JSON_PATH = 'testcase/etc/test.json'
+class TestPrivateNodeSingleMethods(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -52,31 +30,25 @@ class TestPrivateNodeMethods(unittest.TestCase):
         deploy.undeploy(_TEST_CONFIG)
 
     def setUp(self):
-        setattr(self, 'submitHashEventCallback', None)
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def tearDown(self):
-        setattr(self, 'submitHashEventCallback', None)
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
-    def submitSingleHashEventCallback(self, node, event):
+    def submitHashEventCallback(self, node, event):
         event_finalise_hash = event['args']['finalise_hash']
         self._submit_single_hash_data = Web3.toHex(event_finalise_hash)
         node.kill()
 
-    def submitMultipleHashEventCallback(self, node, event):
-        event_finalise_hash = event['args']['finalise_hash']
-        self._submit_multiple_hash_data.append(Web3.toHex(event_finalise_hash))
-        print('-=-=-=-=-=-=-=-= {0}'.format(self._submit_multiple_hash_data[-1]))
-
     def testSingleEvent(self):
-        setattr(self, 'submitHashEventCallback', self.submitSingleHashEventCallback)
         private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
                                                 proved_db_callback_objs=[self],
                                                 record_hash_callback_objs=[],
                                                 wait_time=1)
         private_node.start()
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_data = [{
             'testaaa': 'hash1'
         }, {
@@ -90,10 +62,34 @@ class TestPrivateNodeMethods(unittest.TestCase):
         check_hash_sum = calculate_submit_hash([_ for _ in test_data])
         self.assertEqual(self._submit_single_hash_data, check_hash_sum, 'should be the same')
 
+
+class TestPrivateNodeMultipleMethods(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        deploy.deploy(_TEST_CONFIG)
+
+    @classmethod
+    def tearDownClass(cls):
+        deploy.undeploy(_TEST_CONFIG)
+
+    def setUp(self):
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
+
+    def tearDown(self):
+        setattr(self, 'submitHashEventCallback', None)
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
+
+    def submitHashEventCallback(self, node, event):
+        event_finalise_hash = event['args']['finalise_hash']
+        self._submit_multiple_hash_data.append(Web3.toHex(event_finalise_hash))
+        print('-=-=-=-=-=-=-=-= {0}'.format(self._submit_multiple_hash_data[-1]))
+
     def testMultipleEvent(self):
         self._submit_multiple_hash_data = []
-        setattr(self, 'submitHashEventCallback', self.submitMultipleHashEventCallback)
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
                                                 proved_db_callback_objs=[self],
                                                 record_hash_callback_objs=[],
@@ -112,7 +108,6 @@ class TestPrivateNodeMethods(unittest.TestCase):
 
 
 class TestSubmitChecking(unittest.TestCase):
-    _JSON_PATH = 'testcase/etc/test.json'
 
     @classmethod
     def setUpClass(cls):
@@ -123,13 +118,15 @@ class TestSubmitChecking(unittest.TestCase):
         deploy.undeploy(_TEST_CONFIG)
 
     def setUp(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def tearDown(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def testEmptySubmitChecking(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         key = 'You should not pass'
         existed, finalised, entries_length = test_db.get_finalise_entries_length(key)
         self.assertEqual(False, existed, 'hash doesnt exist')
@@ -137,7 +134,7 @@ class TestSubmitChecking(unittest.TestCase):
         self.assertEqual(0, entries_length, 'hash entry index should be zero')
 
     def testSingleSubmitChecking(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_data = [{
             'testaaa': 'hash1'
         }, {
@@ -172,7 +169,7 @@ class TestSubmitChecking(unittest.TestCase):
                              'hash should be the same')
 
     def testMultipleSubmitChecking(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
             for j in range(TEST_PAIR_PERIOD):
                 val = str(i + j)
@@ -199,7 +196,6 @@ class TestSubmitChecking(unittest.TestCase):
 
 
 class TestFinaliseGroupChecking(unittest.TestCase):
-    _JSON_PATH = 'testcase/etc/test.json'
 
     @classmethod
     def setUpClass(cls):
@@ -210,20 +206,22 @@ class TestFinaliseGroupChecking(unittest.TestCase):
         deploy.undeploy(_TEST_CONFIG)
 
     def setUp(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def tearDown(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def testEmptyFinaliseGroup(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         key = 'You should not pass'
         existed, entries_length = test_db.get_finalised_group_entries_length(key)
         self.assertEqual(False, existed, 'hash doesnt exist')
         self.assertEqual(0, entries_length, 'hash entry index should be zero')
 
     def testSingleFinaliseGroup(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_key = 'show me the money'
         test_data = [{
             'testaaa': 'hash1'
@@ -254,7 +252,7 @@ class TestFinaliseGroupChecking(unittest.TestCase):
                                  'hash should be the same')
 
     def testMultipleFinaliseGroup(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
             for j in range(TEST_PAIR_PERIOD):
                 val = str(i + j)
@@ -283,7 +281,6 @@ class TestFinaliseGroupChecking(unittest.TestCase):
 
 
 class TestPrivateNodeRecordHashMethods(unittest.TestCase):
-    _JSON_PATH = 'testcase/etc/test.json'
 
     @classmethod
     def setUpClass(cls):
@@ -294,10 +291,12 @@ class TestPrivateNodeRecordHashMethods(unittest.TestCase):
         deploy.undeploy(_TEST_CONFIG)
 
     def setUp(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def tearDown(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def recordOverEventCallback(self, node, event):
         event_finalise_hash = event['args']['finalise_hash']

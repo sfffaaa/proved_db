@@ -2,26 +2,12 @@
 # encoding: utf-8
 
 import unittest
-import os
 import sys
-import errno
 sys.path.append('src')
 from proved_db import ProvedDB
 from proved_db_onchain_handler import ProvedDBOnChainHandler
 import deploy
-
-_TEST_CONFIG = 'testcase/etc/test_config.conf'
-ZERO_VALUE = '0x' + '0' * 64
-
-
-def _unlink_silence(path):
-    try:
-        os.unlink(path)
-        return True
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return True
-    return False
+from test_utils import unlink_silence, get_db_path, ZERO_VALUE, _TEST_CONFIG
 
 
 class TestProvedDBSupportTypes(unittest.TestCase):
@@ -36,8 +22,6 @@ class TestProvedDBSupportTypes(unittest.TestCase):
 
 
 class TestProvedDBJsonMethods(unittest.TestCase):
-    _JSON_PATH = 'testcase/etc/test.json'
-
     TEST_DATA = {
         'testCreateEntry': {
             'test01': {
@@ -114,13 +98,15 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         deploy.undeploy(_TEST_CONFIG)
 
     def setUp(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def tearDown(self):
-        self.assertTrue(_unlink_silence(self._JSON_PATH))
+        path = get_db_path(_TEST_CONFIG)
+        self.assertTrue(unlink_silence(path))
 
     def testCreateEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testCreateEntry']
         test_db.create(data)
         # Don't use select check here, so assume create is success here
@@ -135,12 +121,12 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'data on chain is inconsistent {0} != {1}'.format(data, val))
 
     def testCreateNoIdEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testCreateNoIdEntry']
         self.assertRaisesRegex(IOError, 'input key should not more than one', test_db.create, data)
 
     def testCreateDuplicateID(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testCreateDuplicateID']
 
         test_db.create(data)
@@ -153,7 +139,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(data, ZERO_VALUE, "data doesn't exist also!")
 
     def testRetrieveEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testRetrieveEntry']
         test_db.create(data)
 
@@ -171,7 +157,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, onchain_hash))
 
     def testDeleteEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testDeleteEntry']
         test_db.create(data)
 
@@ -188,7 +174,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(data, ZERO_VALUE, 'data on chain is inconsistent {0} != {1}'.format(data, val))
 
     def testDeleteNoEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         data = self.TEST_DATA['testDeleteNoEntry']
         key = list(data)[0]
         test_db.delete(key)
@@ -203,13 +189,13 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, ZERO_VALUE))
 
     def testUpdateNoEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         self.assertRaisesRegex(IOError, 'unique key does not exist',
                                test_db.update, {'you should not pass': {'a': 'b'}})
 
     def testUpdateEntry(self):
         test_key = 'testUpdateEntry'
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_db.create(self.TEST_DATA[test_key][0])
         test_db.update(self.TEST_DATA[test_key][1])
 
@@ -228,13 +214,13 @@ class TestProvedDBJsonMethods(unittest.TestCase):
                          'data on chain is inconsistent {0} != {1}'.format(retrieve_hash, check_hash))
 
     def testCheckEntryNoEntry(self):
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         check_data = test_db.check_entry('I should not pass', 'I should not pass')
         self.assertEqual(check_data, False, 'checking should not pass')
 
     def testCheckEntryWithEntry(self):
         test_key = 'testCheckEntryWithEntry'
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_db.create(self.TEST_DATA[test_key][0])
 
         now_key = list(self.TEST_DATA[test_key][0])[0]
@@ -244,13 +230,13 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
     def testCheckAllEntriesNoEntry(self):
         deploy.deploy(_TEST_CONFIG)
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         self.assertEqual(test_db.check_all_entries(), True, 'There should no data to check')
 
     def testCheckAllEntriesEntry(self):
         deploy.deploy(_TEST_CONFIG)
         test_key = 'testCheckAllEntriesEntry'
-        test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
+        test_db = ProvedDB(_TEST_CONFIG, 'json')
         for test_case in self.TEST_DATA[test_key]:
             test_db.create(test_case)
         self.assertEqual(test_db.check_all_entries(), True, 'There should pass the checking')

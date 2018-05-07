@@ -5,6 +5,7 @@ import os
 import json
 import my_config
 from proved_db_onchain_handler import ProvedDBOnChainHandler
+from config_handler import ConfigHandler
 ZERO_VALUE = '0x' + '0' * 64
 
 
@@ -90,6 +91,9 @@ class ProvedDB():
     def __init__(self, config=my_config.CONFIG_PATH, mytype='json', path=''):
         if not any(mytype == _ for _ in self._support_types.keys()):
             raise IOError('{0} type not in support_types {1}'.format(mytype, self._support_types))
+        if not path:
+            config_handler = ConfigHandler(config)
+            path = config_handler.get_chain_config('DB', 'db_path')
         self._type_db = self._support_types[mytype](path)
         self._onchain_handler = ProvedDBOnChainHandler(config)
 
