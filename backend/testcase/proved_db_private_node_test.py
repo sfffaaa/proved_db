@@ -4,6 +4,7 @@ import sys
 import errno
 sys.path.append('src')
 from proved_db import ProvedDB
+from record_hash import RecordHash
 import deploy
 from proved_db_private_node import ProvedDBPrivateChainNode
 from web3 import Web3
@@ -71,7 +72,8 @@ class TestPrivateNodeMethods(unittest.TestCase):
     def testSingleEvent(self):
         setattr(self, 'submitHashEventCallback', self.submitSingleHashEventCallback)
         private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
-                                                callback_objs=[self],
+                                                proved_db_callback_objs=[self],
+                                                record_hash_callback_objs=[],
                                                 wait_time=1)
         private_node.start()
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
@@ -93,7 +95,8 @@ class TestPrivateNodeMethods(unittest.TestCase):
         setattr(self, 'submitHashEventCallback', self.submitMultipleHashEventCallback)
         test_db = ProvedDB(_TEST_CONFIG, 'json', self._JSON_PATH)
         private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
-                                                callback_objs=[self],
+                                                proved_db_callback_objs=[self],
+                                                record_hash_callback_objs=[],
                                                 wait_time=1)
         private_node.start()
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
@@ -277,6 +280,48 @@ class TestFinaliseGroupChecking(unittest.TestCase):
                     self.assertEqual(Web3.toHex(Web3.sha3(text=str(i + k))),
                                      entry_hash,
                                      'hash should be the same')
+
+
+class TestPrivateNodeRecordHashMethods(unittest.TestCase):
+    _JSON_PATH = 'testcase/etc/test.json'
+
+    @classmethod
+    def setUpClass(cls):
+        deploy.deploy(_TEST_CONFIG)
+
+    @classmethod
+    def tearDownClass(cls):
+        deploy.undeploy(_TEST_CONFIG)
+
+    def setUp(self):
+        self.assertTrue(_unlink_silence(self._JSON_PATH))
+
+    def tearDown(self):
+        self.assertTrue(_unlink_silence(self._JSON_PATH))
+
+    def recordOverEventCallback(self, node, event):
+        event_finalise_hash = event['args']['finalise_hash']
+        self._record_over_hashes.append(Web3.toHex(event_finalise_hash))
+        print('-=-=-=-=-=-=-=-= {0}'.format(self._record_over_hashes[-1]))
+
+    def testMultipleEvent(self):
+        self._record_over_hashes = []
+        test_hash_mgr = RecordHash(_TEST_CONFIG)
+        private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
+                                                proved_db_callback_objs=[],
+                                                record_hash_callback_objs=[self],
+                                                wait_time=1)
+        private_node.start()
+        check_hashes = []
+        for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
+            for j in range(TEST_PAIR_PERIOD):
+                val = str(i + j)
+                hash_val = Web3.toHex(Web3.sha3(text=val))
+                test_hash_mgr.record(hash_val)
+                check_hashes.append(hash_val)
+
+        private_node.join(4)
+        self.assertEqual(check_hashes, self._record_over_hashes, 'data should be the same')
 
 
 if __name__ == '__main__':
