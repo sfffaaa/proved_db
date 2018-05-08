@@ -13,9 +13,13 @@ def get_db_path(config):
 
 
 def calculate_submit_hash(input_vals):
-    hash_sums = [Web3.toInt(Web3.sha3(text=str(val)))
-                 for val in input_vals]
-    return Web3.toHex(Web3.sha3(sum(hash_sums) & (2 ** 256 - 1)))
+    compose_hash = []
+    for vals in input_vals:
+        hash_sums = [Web3.toInt(Web3.sha3(text=str(val)))
+                     for val in vals]
+        compose_hash.append(Web3.toInt(Web3.sha3(sum(hash_sums) & (2 ** 256 - 1))))
+
+    return Web3.toHex(Web3.sha3(sum(compose_hash) & (2 ** 256 - 1)))
 
 
 def unlink_silence(path):

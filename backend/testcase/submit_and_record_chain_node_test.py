@@ -1,11 +1,11 @@
 import unittest
 import sys
 sys.path.append('src')
-from web3 import Web3
 import deploy
 from proved_db import ProvedDB
 from submit_and_record_chain_node import SubmitAndRecordChainNode
 from test_utils import calculate_submit_hash, get_db_path, unlink_silence, _TEST_CONFIG
+from chain_utils import calculate_entry_hash
 
 TEST_PAIR_LENGTH = 2
 TEST_PAIR_PERIOD = 2
@@ -53,7 +53,7 @@ class TestSubmitAndRecordChainNode(unittest.TestCase):
         test_db.update({test_key: test_data[1]})
 
         private_node.join(10)
-        check_hash_sum = calculate_submit_hash([_ for _ in test_data])
+        check_hash_sum = calculate_submit_hash([[test_key, _] for _ in test_data])
 
         existed, finalised, entries_length = test_db.get_finalise_entries_length(check_hash_sum)
         self.assertEqual(True, existed, 'hash does exist')
@@ -62,7 +62,7 @@ class TestSubmitAndRecordChainNode(unittest.TestCase):
 
         for i in range(entries_length):
             entry_hash = test_db.get_finalise_entry(check_hash_sum, i)
-            self.assertEqual(Web3.sha3(text=str(test_data[i])),
+            self.assertEqual(calculate_entry_hash([test_key, test_data[i]]),
                              entry_hash,
                              'hash should be the same')
 

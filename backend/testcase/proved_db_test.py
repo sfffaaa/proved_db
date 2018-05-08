@@ -114,7 +114,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
         onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
-        val = onchain_handler.hash_entry(data[key])
+        val = onchain_handler.hash_entry([key, data[key]])
         exist, data = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
         self.assertEqual(data, val,
@@ -150,7 +150,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
         onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
-        onchain_hash = onchain_handler.hash_entry(data[key])
+        onchain_hash = onchain_handler.hash_entry([key, data[key]])
         exist, retrieve_hash = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
         self.assertEqual(retrieve_hash, onchain_hash,
@@ -168,7 +168,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
         self.assertEqual(data, '', 'data is deleted!')
 
         onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
-        val = onchain_handler.hash_entry(data)
+        val = onchain_handler.hash_entry([key, data])
         exist, data = onchain_handler.retrieve(key)
         self.assertEqual(exist, False, 'key is on chain')
         self.assertEqual(data, ZERO_VALUE, 'data on chain is inconsistent {0} != {1}'.format(data, val))
@@ -207,7 +207,7 @@ class TestProvedDBJsonMethods(unittest.TestCase):
 
         onchain_handler = ProvedDBOnChainHandler(_TEST_CONFIG)
         key = list(data)[0]
-        check_hash = onchain_handler.hash_entry(data[key])
+        check_hash = onchain_handler.hash_entry([key, data[key]])
         exist, retrieve_hash = onchain_handler.retrieve(key)
         self.assertEqual(exist, True, 'key is not on chain')
         self.assertEqual(retrieve_hash, check_hash,

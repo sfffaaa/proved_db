@@ -5,7 +5,7 @@ from web3 import Web3
 import my_config
 import time
 from contract_handler import ContractHandler
-from chain_utils import convert_to_bytes
+from chain_utils import convert_to_bytes, calculate_entry_hash
 
 GAS_SPENT = 1000000
 
@@ -17,8 +17,8 @@ class ProvedDBOnChainHandler():
         self._w3 = self._contract_handler.get_w3()
         self._contract_inst = self._contract_handler.get_contract()
 
-    def hash_entry(self, val):
-        return Web3.toHex(Web3.sha3(text=str(val)))
+    def hash_entry(self, input_vals):
+        return calculate_entry_hash(input_vals)
 
     def create(self, key, val):
         print('==== create start ====')
@@ -120,7 +120,7 @@ class ProvedDBOnChainHandler():
         hash_arg = convert_to_bytes(hash_sum)
         ret = self._contract_inst.GetFinaliseEntry(hash_arg, idx)
         print('==== get_finalise_entries_length end ====')
-        return ret
+        return Web3.toHex(ret)
 
     def finalise(self, hash_sum):
         print('==== finalise start ====')
