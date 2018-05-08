@@ -4,7 +4,7 @@ sys.path.append('src')
 from web3 import Web3
 import deploy
 from proved_db import ProvedDB
-from proved_db_private_node import SubmitAndRecordChainNode
+from submit_and_record_chain_node import SubmitAndRecordChainNode
 from test_utils import calculate_submit_hash, get_db_path, unlink_silence, _TEST_CONFIG
 
 TEST_PAIR_LENGTH = 2

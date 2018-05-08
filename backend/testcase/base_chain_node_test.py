@@ -4,7 +4,7 @@ sys.path.append('src')
 from proved_db import ProvedDB
 from record_hash import RecordHash
 import deploy
-from proved_db_private_node import ProvedDBPrivateChainNode
+from base_chain_node import BaseChainNode
 from web3 import Web3
 from test_utils import calculate_submit_hash, get_db_path, unlink_silence, _TEST_CONFIG
 
@@ -43,10 +43,10 @@ class TestPrivateNodeSingleMethods(unittest.TestCase):
         node.kill()
 
     def testSingleEvent(self):
-        private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
-                                                proved_db_callback_objs=[self],
-                                                record_hash_callback_objs=[],
-                                                wait_time=1)
+        private_node = BaseChainNode(config_path=_TEST_CONFIG,
+                                     proved_db_callback_objs=[self],
+                                     record_hash_callback_objs=[],
+                                     wait_time=1)
         private_node.start()
         test_db = ProvedDB(_TEST_CONFIG, 'json')
         test_data = [{
@@ -90,10 +90,10 @@ class TestPrivateNodeMultipleMethods(unittest.TestCase):
     def testMultipleEvent(self):
         self._submit_multiple_hash_data = []
         test_db = ProvedDB(_TEST_CONFIG, 'json')
-        private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
-                                                proved_db_callback_objs=[self],
-                                                record_hash_callback_objs=[],
-                                                wait_time=1)
+        private_node = BaseChainNode(config_path=_TEST_CONFIG,
+                                     proved_db_callback_objs=[self],
+                                     record_hash_callback_objs=[],
+                                     wait_time=1)
         private_node.start()
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
             for j in range(TEST_PAIR_PERIOD):
@@ -306,10 +306,10 @@ class TestPrivateNodeRecordHashMethods(unittest.TestCase):
     def testMultipleEvent(self):
         self._record_over_hashes = []
         test_hash_mgr = RecordHash(_TEST_CONFIG)
-        private_node = ProvedDBPrivateChainNode(config_path=_TEST_CONFIG,
-                                                proved_db_callback_objs=[],
-                                                record_hash_callback_objs=[self],
-                                                wait_time=1)
+        private_node = BaseChainNode(config_path=_TEST_CONFIG,
+                                     proved_db_callback_objs=[],
+                                     record_hash_callback_objs=[self],
+                                     wait_time=1)
         private_node.start()
         check_hashes = []
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):

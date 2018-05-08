@@ -4,18 +4,16 @@
 import gevent
 import my_config
 from contract_handler import ContractHandler
-from record_hash import RecordHash
-from proved_db import ProvedDB
 
 
-class ProvedDBPrivateChainNode(gevent.Greenlet):
+class BaseChainNode(gevent.Greenlet):
 
     def __init__(self,
                  config_path=my_config.CONFIG_PATH,
                  proved_db_callback_objs=[],
                  record_hash_callback_objs=[],
                  wait_time=3):
-        super(ProvedDBPrivateChainNode, self).__init__()
+        super(BaseChainNode, self).__init__()
         self.wait_time = wait_time
         self._setup_proved_db(config_path, proved_db_callback_objs)
         self._setup_record_hash(config_path, record_hash_callback_objs)
@@ -49,32 +47,7 @@ class ProvedDBPrivateChainNode(gevent.Greenlet):
             gevent.sleep(self.wait_time)
 
 
-class SubmitAndRecordChainNode(ProvedDBPrivateChainNode):
-
-    def __init__(self,
-                 config_path=my_config.CONFIG_PATH,
-                 proved_db_callback_objs=[],
-                 record_hash_callback_objs=[],
-                 wait_time=3):
-        self._record_hash_mgr = RecordHash(config_path)
-        self._proved_db_mgr = ProvedDB(config_path, 'json')
-        proved_db_callback_objs = [self] + proved_db_callback_objs
-        record_hash_callback_objs = [self] + record_hash_callback_objs
-        super(SubmitAndRecordChainNode, self).__init__(config_path,
-                                                       proved_db_callback_objs,
-                                                       record_hash_callback_objs,
-                                                       wait_time)
-
-    def submitHashEventCallback(self, node, event):
-        event_finalise_hash = event['args']['finalise_hash']
-        self._record_hash_mgr.record(event_finalise_hash)
-
-    def recordOverEventCallback(self, node, event):
-        event_finalise_hash = event['args']['finalise_hash']
-        self._proved_db_mgr.finalise(event_finalise_hash)
-
-
 if __name__ == '__main__':
-    private_chain_node = ProvedDBPrivateChainNode()
-    private_chain_node.start()
-    private_chain_node.join()
+    base_chain_node = BaseChainNode()
+    base_chain_node.start()
+    base_chain_node.join()
