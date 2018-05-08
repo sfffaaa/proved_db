@@ -20,28 +20,21 @@ class ProvedDBPrivateChainNode(gevent.Greenlet):
         self._setup_proved_db(config_path, proved_db_callback_objs)
         self._setup_record_hash(config_path, record_hash_callback_objs)
 
-    # [TODO] Need to refine..
     def _setup_proved_db(self, config_path, callback_objs):
         self._proved_db = {}
         self._proved_db['callback_objs'] = callback_objs
         self._proved_db['contract_handler'] = ContractHandler('ProvedDB', config_path)
-        self._proved_db['w3'] = self._proved_db['contract_handler'].get_w3()
-        self._proved_db['contract_inst'] = self._proved_db['contract_handler'].get_contract()
-        self._proved_db['contract_event_inst'] = self._proved_db['contract_handler']._contract_event_inst
 
         self._proved_db['submit_hash_event_filter'] = \
-            self._proved_db['contract_event_inst'].events.submit_hash.createFilter(fromBlock='latest')
+            self._proved_db['contract_handler']._contract_event_inst.events.submit_hash.createFilter(fromBlock='latest')
 
     def _setup_record_hash(self, config_path, callback_objs):
         self._record_hash = {}
         self._record_hash['callback_objs'] = callback_objs
         self._record_hash['contract_handler'] = ContractHandler('RecordHash', config_path)
-        self._record_hash['w3'] = self._record_hash['contract_handler'].get_w3()
-        self._record_hash['contract_inst'] = self._record_hash['contract_handler'].get_contract()
-        self._record_hash['contract_event_inst'] = self._record_hash['contract_handler']._contract_event_inst
 
         self._record_hash['record_over_event_filter'] = \
-            self._record_hash['contract_event_inst'].events.record_over.createFilter(fromBlock='latest')
+            self._record_hash['contract_handler']._contract_event_inst.events.record_over.createFilter(fromBlock='latest')
 
     def _run(self):
         while True:
