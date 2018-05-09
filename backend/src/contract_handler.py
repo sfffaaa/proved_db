@@ -1,6 +1,5 @@
 import my_config
 from web3 import Web3
-from web3.contract import ConciseContract
 from config_handler import ConfigHandler
 import os
 import json
@@ -20,11 +19,7 @@ class ContractHandler():
         contract_abi = contract_info['abi']
         contract_address = contract_info['address']
         self._contract_inst = self._w3.eth.contract(contract_address,
-                                                    abi=contract_abi,
-                                                    ContractFactoryClass=ConciseContract)
-        # [TODO] Should change this instance (maybe compress with self._contract_inst)
-        self._contract_event_inst = self._w3.eth.contract(contract_address,
-                                                          abi=contract_abi)
+                                                    abi=contract_abi)
 
     def _check_contract_name(self, check_name):
         contract_names = self._config_handler.get_chain_config('Deploy', 'target_contract_name')

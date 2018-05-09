@@ -1,6 +1,5 @@
 from web3 import Web3, IPCProvider
 from solc import compile_source
-from web3.contract import ConciseContract
 
 # Solidity source code
 contract_source_code = '''
@@ -267,7 +266,7 @@ w3 = Web3(IPCProvider('/Users/jaypan/private-eth/test1/node1/geth.ipc'))
 contract = w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
 
 # Get transaction hash from deployed contract
-tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 10010000})
+tx_hash = contract.constructor().transact({'from': w3.eth.accounts[0], 'gas': 10010000})
 w3.miner.start(1)
 
 # Get tx receipt to get contract address
@@ -281,20 +280,19 @@ w3.miner.stop()
 
 # Contract instance in concise mode
 contract_instance = w3.eth.contract(abi=contract_interface['abi'],
-                                    address=contract_address,
-                                    ContractFactoryClass=ConciseContract)
+                                    address=contract_address)
 
 # Getters + Setters for web3.eth.contract object
 print('test')
-tx_hash = contract_instance.Create('a', 'b', transact={'from': w3.eth.accounts[0]})
-tx_hash = contract_instance.Create('c', 'd', transact={'from': w3.eth.accounts[0]})
+tx_hash = contract_instance.functions.Create('a', 'b').transact({'from': w3.eth.accounts[0]})
+tx_hash = contract_instance.functions.Create('c', 'd').transact({'from': w3.eth.accounts[0]})
 print(tx_hash)
 w3.miner.start(1)
 time.sleep(10)
 w3.miner.stop()
-print('Contract value: {}'.format(contract_instance.Retrieve('a')))
+print('Contract value: {}'.format(contract_instance.functions.Retrieve('a').call()))
 print(tx_receipt)
-data = contract_instance.Retrieve('a')
+data = contract_instance.functions.Retrieve('a').call()
 print(Web3.toHex(data[1]))
 print(Web3.toHex(Web3.sha3(text='b')))
 # contract_instance.setGreeting('Nihao', transact={'from': w3.eth.accounts[0]})

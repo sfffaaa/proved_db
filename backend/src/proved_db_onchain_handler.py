@@ -22,9 +22,9 @@ class ProvedDBOnChainHandler():
 
     def create(self, key, val):
         print('==== create start ====')
-        tx_hash = self._contract_inst.Create(str(key), str(val),
-                                             transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': GAS_SPENT})
+        tx_hash = self._contract_inst.functions.Create(str(key), str(val)) \
+                                     .transact({'from': self._w3.eth.accounts[0],
+                                                'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -43,9 +43,9 @@ class ProvedDBOnChainHandler():
 
     def update(self, key, val):
         print('==== update start ====')
-        tx_hash = self._contract_inst.Update(str(key), str(val),
-                                             transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': GAS_SPENT})
+        tx_hash = self._contract_inst.functions.Update(str(key), str(val)) \
+                                               .transact({'from': self._w3.eth.accounts[0],
+                                                          'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -65,15 +65,15 @@ class ProvedDBOnChainHandler():
     def retrieve(self, key):
         print('==== retrieve start ====')
 
-        exist, data = self._contract_inst.Retrieve(str(key))
+        exist, data = self._contract_inst.functions.Retrieve(str(key)).call()
         print('==== retrieve end ====')
         return (exist, Web3.toHex(data))
 
     def delete(self, key):
         print('==== deletestart ====')
-        tx_hash = self._contract_inst.Delete(str(key),
-                                             transact={'from': self._w3.eth.accounts[0],
-                                                       'gas': GAS_SPENT})
+        tx_hash = self._contract_inst.functions.Delete(str(key)) \
+                                               .transact({'from': self._w3.eth.accounts[0],
+                                                          'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
         self._w3.miner.start(1)
@@ -92,41 +92,41 @@ class ProvedDBOnChainHandler():
 
     def check_entry(self, key, val):
         print('==== check_entry start ====')
-        ret = self._contract_inst.CheckEntry(str(key), str(val))
+        ret = self._contract_inst.functions.CheckEntry(str(key), str(val)).call()
         print('==== check_entry end ====')
         return ret
 
     def get_keys_length(self):
         print('==== get_keys_length start ====')
-        ret = self._contract_inst.GetKeysLength()
+        ret = self._contract_inst.functions.GetKeysLength().call()
         print('==== get_keys_length end ====')
         return ret
 
     def get_key(self, idx):
         print('==== get_key start ====')
-        ret = self._contract_inst.GetKey(idx)
+        ret = self._contract_inst.functions.GetKey(idx).call()
         print('==== get_key end ====')
         return ret
 
     def get_finalise_entries_length(self, hash_sum):
         print('==== get_finalise_entries_length start ====')
         hash_arg = convert_to_bytes(hash_sum)
-        existed, finalised, length = self._contract_inst.GetFinaliseEntriesLength(hash_arg)
+        existed, finalised, length = self._contract_inst.functions.GetFinaliseEntriesLength(hash_arg).call()
         print('==== get_finalise_entries_length end ====')
         return existed, finalised, length
 
     def get_finalise_entry(self, hash_sum, idx):
         print('==== get_finalise_entries_length start ====')
         hash_arg = convert_to_bytes(hash_sum)
-        ret = self._contract_inst.GetFinaliseEntry(hash_arg, idx)
+        ret = self._contract_inst.functions.GetFinaliseEntry(hash_arg, idx).call()
         print('==== get_finalise_entries_length end ====')
         return Web3.toHex(ret)
 
     def finalise(self, hash_sum):
         print('==== finalise start ====')
         hash_arg = convert_to_bytes(hash_sum)
-        tx_hash = self._contract_inst.Finalise(hash_arg,
-                                               transact={'from': self._w3.eth.accounts[0],
+        tx_hash = self._contract_inst.functions.Finalise(hash_arg) \
+                                               .transact({'from': self._w3.eth.accounts[0],
                                                          'gas': GAS_SPENT})
 
         tx_receipt = self._w3.eth.getTransactionReceipt(tx_hash)
@@ -147,14 +147,14 @@ class ProvedDBOnChainHandler():
     def get_finalised_group_entries_length(self, hash_sum):
         print('==== get_finalised_group_entries_length start ====')
         hash_arg = convert_to_bytes(hash_sum)
-        existed, length = self._contract_inst.GetFinalisedGroupEntriesLength(hash_arg)
+        existed, length = self._contract_inst.functions.GetFinalisedGroupEntriesLength(hash_arg).call()
         print('==== get_finalised_group_entries_length end ====')
         return existed, length
 
     def get_finalised_group_entry(self, hash_sum, idx):
         print('==== get_finalised_group_entry start ====')
         hash_arg = convert_to_bytes(hash_sum)
-        ret = self._contract_inst.GetFinalisedGroupEntry(hash_arg, idx)
+        ret = self._contract_inst.functions.GetFinalisedGroupEntry(hash_arg, idx).call()
         print('==== get_finalised_group_entry end ====')
         return Web3.toHex(ret)
 
