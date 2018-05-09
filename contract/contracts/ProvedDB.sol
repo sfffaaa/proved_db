@@ -1,6 +1,32 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
+
+library Strings {
+
+	// copy from https://github.com/willitscale/solidity-util/blob/master/lib/Strings.sol
+    function compareTo(string _base, string _value)
+		pure
+        internal 
+        returns (bool) {
+        bytes memory _baseBytes = bytes(_base);
+        bytes memory _valueBytes = bytes(_value);
+
+        if (_baseBytes.length != _valueBytes.length) {
+            return false;
+        }
+
+        for(uint i = 0; i < _baseBytes.length; i++) {
+            if (_baseBytes[i] != _valueBytes[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
 
 contract ProvedDB {
+
+	using Strings for string;
 
 	struct Entry {
 		string action;
@@ -40,13 +66,9 @@ contract ProvedDB {
 
 	//[TODO] but right now I haven't upgrade my solc
     //function constuctor(uint submit_period) public {
-    function ProvedDB() public {
+    constructor() public {
 		_submit_period = 2;
     }
-
-	function strcmp(string target_str, string check_str) private pure returns (bool) {
-		return keccak256(target_str) != keccak256(check_str);
-	}
 
 	function HashPair(string key, string val) private pure returns (bytes32) {
 		uint uint_hash = uint(keccak256(key)) + uint(keccak256(val));
@@ -76,7 +98,7 @@ contract ProvedDB {
 		}
 
 		_submit_list.length = 0;
-		submit_hash(finalise_hash);
+		emit submit_hash(finalise_hash);
 		return true;
 	}
 
@@ -151,7 +173,7 @@ contract ProvedDB {
 
 		assert(0 != _kv_hash_map[input_key].entries.length);
 		assert(0 != _key_idxa1_map[input_key]);
-		assert(!strcmp(_keys[_key_idxa1_map[input_key] - 1], input_key));
+		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
 
 		uint entry_len = _kv_hash_map[input_key].entries.length - 1;
 		return (true, _kv_hash_map[input_key].entries[entry_len].hash_value);
@@ -160,7 +182,7 @@ contract ProvedDB {
     function Update(string input_key, string val) public {
 		assert(true == _kv_hash_map[input_key].is_exist);
 		assert(0 != _key_idxa1_map[input_key]);
-		assert(!strcmp(_keys[_key_idxa1_map[input_key] - 1], input_key));
+		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
 
 		bytes32 hash = HashPair(input_key, val);
 		Entry memory entry = Entry("update", hash);
@@ -181,7 +203,7 @@ contract ProvedDB {
 
 		// remove key
 		assert(0 != _key_idxa1_map[input_key]);
-		assert(!strcmp(_keys[_key_idxa1_map[input_key] - 1], input_key));
+		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
 		uint remove_idx = _key_idxa1_map[input_key] - 1;
 		uint last_idx = _keys.length - 1;
 		if (remove_idx != last_idx) {
@@ -199,7 +221,7 @@ contract ProvedDB {
 		(exist, hash) = Retrieve(input_key);
 
 		if (false == exist) {
-			if (!strcmp('', val)) {
+			if (true == val.compareTo('')) {
 				return true;
 			} else {
 				return false;
