@@ -22,12 +22,25 @@ def _GetBuildContractJsonFileAttribute(filepath, key):
         return json.load(f)[key]
 
 
-def _DeploySmartContract(contract_path, file_ipc):
+def _GetContractInst(config_handler, contract_name, contract):
+    if contract_name == 'ProvedDB':
+        raw_args = config_handler.get_chain_config(contract_name, 'args')
+        contract_inst = contract.constructor(int(raw_args.split()[0].strip()))
+    elif contract_name == 'RecordHash':
+        contract_inst = contract.constructor()
+    else:
+        raise IOError('Wrong contract name {0}'.format(contract_name))
+    return contract_inst
+
+
+def _DeploySmartContract(config_handler, contract_name, contract_path):
+    file_ipc = config_handler.get_chain_config('Ethereum', 'file_ipc')
     w3 = Web3(Web3.IPCProvider(file_ipc))
     abi = _GetBuildContractJsonFileAttribute(contract_path, 'abi')
     bytecode = _GetBuildContractJsonFileAttribute(contract_path, 'bytecode')
-    contract = w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx_hash = contract.constructor().transact({'from': w3.eth.accounts[0], 'gas': 5000000})
+    contract_inst = _GetContractInst(config_handler, contract_name,
+                                     w3.eth.contract(abi=abi, bytecode=bytecode))
+    tx_hash = contract_inst.transact({'from': w3.eth.accounts[0], 'gas': 5000000})
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     w3.miner.start(1)
     retry_time = 0
@@ -69,8 +82,9 @@ def _deploy_single_smart_contract(config_handler, contract_name):
     assert os.path.isfile(contract_path), 'file compiled path {0} doesn\'t exist'.format(contract_path)
 
     print('==== Deploy contract to private chain  ====')
-    contract_detail, contract_owner = _DeploySmartContract(contract_path,
-                                                           config_handler.get_chain_config('Ethereum', 'file_ipc'))
+    contract_detail, contract_owner = _DeploySmartContract(config_handler,
+                                                           contract_name,
+                                                           contract_path)
 
     output_path = os.path.join(config_handler.get_chain_config('Output', 'file_path'),
                                '{0}.json'.format(contract_name))

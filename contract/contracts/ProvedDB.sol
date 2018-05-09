@@ -64,10 +64,8 @@ contract ProvedDB {
 	SubmitEntry[] _submit_list;
 	event submit_hash(bytes32 finalise_hash);
 
-	//[TODO] but right now I haven't upgrade my solc
-    //function constuctor(uint submit_period) public {
-    constructor() public {
-		_submit_period = 2;
+    constructor(uint submit_period) public {
+		_submit_period = submit_period;
     }
 
 	function HashPair(string key, string val) private pure returns (bytes32) {
