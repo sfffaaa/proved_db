@@ -6,6 +6,9 @@ import errno
 ZERO_VALUE = '0x' + '0' * 64
 _TEST_CONFIG = 'testcase/etc/test_config.conf'
 
+TEST_PAIR_LENGTH = 2
+TEST_PAIR_PERIOD = 2
+
 
 def get_db_path(config):
     config_handler = ConfigHandler(config)
