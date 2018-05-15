@@ -1,28 +1,8 @@
 pragma solidity ^0.4.23;
 
-library Strings {
+import {Strings} from "./strings.sol";
+import {KeysRecord} from "./KeysRecord.sol";
 
-	// copy from https://github.com/willitscale/solidity-util/blob/master/lib/Strings.sol
-    function compareTo(string _base, string _value)
-		pure
-        internal 
-        returns (bool) {
-        bytes memory _baseBytes = bytes(_base);
-        bytes memory _valueBytes = bytes(_value);
-
-        if (_baseBytes.length != _valueBytes.length) {
-            return false;
-        }
-
-        for(uint i = 0; i < _baseBytes.length; i++) {
-            if (_baseBytes[i] != _valueBytes[i]) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
 
 contract ProvedDB {
 
@@ -51,10 +31,6 @@ contract ProvedDB {
 
     mapping(string => Record) _kv_hash_map;
 
-	string[] _keys;
-	mapping(string => uint) _key_idxa1_map;
-
-	//[TODO] let owner to change this
 	uint _submit_period;
 	mapping(bytes32 => FinaliseEntry) _finalize_hash_map;
 
@@ -64,8 +40,11 @@ contract ProvedDB {
 	SubmitEntry[] _submit_list;
 	event submit_hash(bytes32 finalise_hash);
 
-    constructor(uint submit_period) public {
+	KeysRecord _keys_record;
+
+    constructor(uint submit_period, address keys_record_addr) public {
 		_submit_period = submit_period;
+		_keys_record = KeysRecord(keys_record_addr);
     }
 
 	function HashPair(string key, string val) private pure returns (bytes32) {
@@ -147,15 +126,13 @@ contract ProvedDB {
 
     function Create(string input_key, string val) public {
 		assert(false == _kv_hash_map[input_key].is_exist);
-		assert(0 == _key_idxa1_map[input_key]);
 
 		bytes32 hash = HashPair(input_key, val);
 		Entry memory entry = Entry("create", hash);
 		_kv_hash_map[input_key].is_exist = true;
 		_kv_hash_map[input_key].entries.push(entry);
 
-		_keys.push(input_key);
-		_key_idxa1_map[input_key] = _keys.length;
+		_keys_record.Create(input_key);
 
 		_submit_list.push(SubmitEntry(true, entry));
 		if (IsNeedSubmit()) {
@@ -165,13 +142,13 @@ contract ProvedDB {
 
     function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
 		if (false == _kv_hash_map[input_key].is_exist) {
-			assert(0 == _key_idxa1_map[input_key]);
+			_keys_record.RetrieveCheck(input_key, false);
 			return;
 		}
 
+		_keys_record.RetrieveCheck(input_key, true);
+
 		assert(0 != _kv_hash_map[input_key].entries.length);
-		assert(0 != _key_idxa1_map[input_key]);
-		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
 
 		uint entry_len = _kv_hash_map[input_key].entries.length - 1;
 		return (true, _kv_hash_map[input_key].entries[entry_len].hash_value);
@@ -179,8 +156,7 @@ contract ProvedDB {
     
     function Update(string input_key, string val) public {
 		assert(true == _kv_hash_map[input_key].is_exist);
-		assert(0 != _key_idxa1_map[input_key]);
-		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
+		_keys_record.UpdateCheck(input_key);
 
 		bytes32 hash = HashPair(input_key, val);
 		Entry memory entry = Entry("update", hash);
@@ -199,18 +175,7 @@ contract ProvedDB {
 		_kv_hash_map[input_key].is_exist = false;
 		_kv_hash_map[input_key].entries.push(Entry("delete", keccak256("")));
 
-		// remove key
-		assert(0 != _key_idxa1_map[input_key]);
-		assert(true == _keys[_key_idxa1_map[input_key] - 1].compareTo(input_key));
-		uint remove_idx = _key_idxa1_map[input_key] - 1;
-		uint last_idx = _keys.length - 1;
-		if (remove_idx != last_idx) {
-			string memory last_key = _keys[last_idx];
-			_keys[remove_idx] = last_key;
-			_key_idxa1_map[last_key] = remove_idx + 1;
-		}
-		_key_idxa1_map[input_key] = 0;
-		_keys.length--;
+		_keys_record.Delete(input_key);
 	}
 
 	function CheckEntry(string input_key, string val) public constant returns (bool) {
@@ -232,10 +197,10 @@ contract ProvedDB {
 	}
 
 	function GetKeysLength() public constant returns (uint) {
-		return _keys.length;
+		return _keys_record.GetKeysLength();
 	}
 
 	function GetKey(uint idx) public constant returns (string) {
-		return _keys[idx];
+		return _keys_record.GetKey(idx);
 	}
 }
