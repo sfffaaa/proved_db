@@ -36,7 +36,7 @@ class TestSubmitAndRecordChainNode(unittest.TestCase):
 
     def testSingleEvent(self):
         private_node = SubmitAndRecordChainNode(config_path=_TEST_CONFIG,
-                                                finalise_record_callback_objs=[],
+                                                submit_hash_callback_objs=[],
                                                 record_hash_callback_objs=[],
                                                 wait_time=1)
         private_node.start()

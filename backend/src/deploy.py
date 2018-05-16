@@ -96,7 +96,10 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
                 kargs['finalise_record_info']['contractAddress']]
     elif contract_name == 'FinaliseRecord':
         raw_args = config_handler.get_chain_config(contract_name, 'args')
-        return [int(raw_args.split()[0].strip())]
+        return [int(raw_args.split()[0].strip()),
+                kargs['event_emitter_info']['contractAddress']]
+    elif contract_name == 'EventEmitter':
+        return []
     elif contract_name == 'ProvedCRUD':
         return []
     elif contract_name == 'RecordHash':
@@ -139,7 +142,10 @@ def deploy(config_path=CONFIG_PATH):
 
     keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord')
     proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD')
-    finalise_record_info = _DeploySmartContractV0(config_handler, 'FinaliseRecord')
+    event_emitter_info = _DeploySmartContractV0(config_handler, 'EventEmitter')
+    finalise_record_info = _DeploySmartContractV0(config_handler,
+                                                  'FinaliseRecord',
+                                                  event_emitter_info=event_emitter_info)
     _DeploySmartContractV0(config_handler, 'ProvedDB',
                            keys_record_info=keys_record_info,
                            proved_crud_info=proved_crud_info,

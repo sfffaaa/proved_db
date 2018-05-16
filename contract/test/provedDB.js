@@ -1,5 +1,5 @@
 var ProvedDB = artifacts.require("ProvedDB");
-var FinaliseRecord = artifacts.require("FinaliseRecord");
+var EventEmitter = artifacts.require("EventEmitter");
 const BigNumber = require('bignumber.js');
 require('truffle-test-utils').init();
 
@@ -377,12 +377,12 @@ contract("ProvedDBSubmit", function(accounts) {
 
     it("Create, Update submit", async function() {
         var testKey = "test09";
-        var finaliseRecordContract = await FinaliseRecord.deployed();
+        var eventEmitterContract = await EventEmitter.deployed();
         var checkHash = GetSubmitHashSum([[testKey, TEST_DATA[testKey][0]],
                                           [testKey, TEST_DATA[testKey][1]]]);
 
         var contract = await ProvedDB.deployed();
-        var checkEvent = finaliseRecordContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
+        var checkEvent = eventEmitterContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
         checkEvent.watch(function (error, resp) {
             assert.equal(resp.args.finalise_hash, checkHash, "event should be the same");
             checkEvent.stopWatching();
@@ -408,8 +408,8 @@ contract("ProvedDBSubmit", function(accounts) {
                                               ['' + (i + 1), testEntries[i + 1]]]);
             finalAnswerHash.push(checkHash);
         }
-        var finaliseRecordContract = await FinaliseRecord.deployed();
-        var checkEvent = finaliseRecordContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
+        var eventEmitterContract = await EventEmitter.deployed();
+        var checkEvent = eventEmitterContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
         var checkIdx = 0;
         checkEvent.watch(function (error, resp) {
             assert.equal(resp.args.finalise_hash, finalAnswerHash[checkIdx], "event should be the same");

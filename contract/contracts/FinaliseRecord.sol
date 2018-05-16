@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
+import {EventEmitter} from "./EventEmitter.sol";
 
 contract FinaliseRecord {
 	using Strings for string;
@@ -28,10 +29,11 @@ contract FinaliseRecord {
 	mapping(bytes32 => bytes32) _kv_hash_to_finalised_hash_map;
 
 	SubmitEntry[] _submit_list;
-	event submit_hash(bytes32 finalise_hash);
+	EventEmitter _event_emitter;
 
-    constructor(uint submit_period) public {
+    constructor(uint submit_period, address event_emitter_addr) public {
 		_submit_period = submit_period;
+		_event_emitter = EventEmitter(event_emitter_addr);
     }
 
 	function IsNeedSubmit() private view returns (bool) {
@@ -57,7 +59,7 @@ contract FinaliseRecord {
 		}
 
 		_submit_list.length = 0;
-		emit submit_hash(finalise_hash);
+		_event_emitter.emit_submit_hash(finalise_hash);
 		return true;
 	}
 
