@@ -92,7 +92,11 @@ def _DumpSmartContract(config_handler, contract_name, contract_detail, contract_
 def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
     if contract_name == 'ProvedDB':
         raw_args = config_handler.get_chain_config(contract_name, 'args')
-        return [int(raw_args.split()[0].strip()), kargs['keys_record_info']['contractAddress']]
+        return [int(raw_args.split()[0].strip()),
+                kargs['keys_record_info']['contractAddress'],
+                kargs['proved_crud_info']['contractAddress']]
+    elif contract_name == 'ProvedCRUD':
+        return []
     elif contract_name == 'RecordHash':
         return []
     elif contract_name == 'KeysRecord':
@@ -132,7 +136,10 @@ def deploy(config_path=CONFIG_PATH):
     os.system(cmd)
 
     keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord')
-    _DeploySmartContractV0(config_handler, 'ProvedDB', keys_record_info=keys_record_info)
+    proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD')
+    _DeploySmartContractV0(config_handler, 'ProvedDB',
+                           keys_record_info=keys_record_info,
+                           proved_crud_info=proved_crud_info)
     _DeploySmartContractV0(config_handler, 'RecordHash')
 
 

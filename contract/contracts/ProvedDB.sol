@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
 import {KeysRecord} from "./KeysRecord.sol";
+import {ProvedCRUD} from "./ProvedCRUD.sol";
 
 
 contract ProvedDB {
@@ -24,13 +25,6 @@ contract ProvedDB {
 		Entry[] entries;
 	}
 
-	struct Record {
-		bool is_exist;
-		Entry[] entries;
-	}
-
-    mapping(string => Record) _kv_hash_map;
-
 	uint _submit_period;
 	mapping(bytes32 => FinaliseEntry) _finalize_hash_map;
 
@@ -41,10 +35,12 @@ contract ProvedDB {
 	event submit_hash(bytes32 finalise_hash);
 
 	KeysRecord _keys_record;
+	ProvedCRUD _proved_crud;
 
-    constructor(uint submit_period, address keys_record_addr) public {
+    constructor(uint submit_period, address keys_record_addr, address proved_crud_addr) public {
 		_submit_period = submit_period;
 		_keys_record = KeysRecord(keys_record_addr);
+		_proved_crud = ProvedCRUD(proved_crud_addr);
     }
 
 
@@ -121,14 +117,12 @@ contract ProvedDB {
 	}
 
     function Create(string input_key, string val) public {
-		assert(false == _kv_hash_map[input_key].is_exist);
+		_proved_crud.Create(input_key, val);
+		_keys_record.Create(input_key);
 
 		bytes32 hash = input_key.hashPair(val);
 		Entry memory entry = Entry("create", hash);
-		_kv_hash_map[input_key].is_exist = true;
-		_kv_hash_map[input_key].entries.push(entry);
 
-		_keys_record.Create(input_key);
 
 		_submit_list.push(SubmitEntry(true, entry));
 		if (IsNeedSubmit()) {
@@ -136,27 +130,20 @@ contract ProvedDB {
 		}
     }
 
-    function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
-		if (false == _kv_hash_map[input_key].is_exist) {
-			_keys_record.RetrieveCheck(input_key, false);
-			return;
-		}
-
-		_keys_record.RetrieveCheck(input_key, true);
-
-		assert(0 != _kv_hash_map[input_key].entries.length);
-
-		uint entry_len = _kv_hash_map[input_key].entries.length - 1;
-		return (true, _kv_hash_map[input_key].entries[entry_len].hash_value);
+    function Retrieve(string input_key) public constant returns (bool, bytes32) {
+		bool rexist;
+		bytes32 rdata;
+		(rexist, rdata) = _proved_crud.Retrieve(input_key);
+		_keys_record.RetrieveCheck(input_key, rexist);
+		return (rexist, rdata);
     }
     
     function Update(string input_key, string val) public {
-		assert(true == _kv_hash_map[input_key].is_exist);
+		_proved_crud.Update(input_key, val);
 		_keys_record.UpdateCheck(input_key);
 
 		bytes32 hash = input_key.hashPair(val);
 		Entry memory entry = Entry("update", hash);
-		_kv_hash_map[input_key].entries.push(entry);
 
 		_submit_list.push(SubmitEntry(true, entry));
 		if (IsNeedSubmit()) {
@@ -165,31 +152,13 @@ contract ProvedDB {
     }
 
     function Delete(string input_key) public {
-		if (false == _kv_hash_map[input_key].is_exist) {
-			return;
+		if (true == _proved_crud.Delete(input_key)) {
+			_keys_record.Delete(input_key);
 		}
-		_kv_hash_map[input_key].is_exist = false;
-		_kv_hash_map[input_key].entries.push(Entry("delete", keccak256("")));
-
-		_keys_record.Delete(input_key);
 	}
 
 	function CheckEntry(string input_key, string val) public constant returns (bool) {
-		bool exist = false;
-		bytes32 hash = '';
-		(exist, hash) = Retrieve(input_key);
-
-		if (false == exist) {
-			if (true == val.compareTo('')) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-		if (hash == input_key.hashPair(val)) {
-			return true;
-		}
-		return false;
+		return _proved_crud.CheckEntry(input_key, val);
 	}
 
 	function GetKeysLength() public constant returns (uint) {
