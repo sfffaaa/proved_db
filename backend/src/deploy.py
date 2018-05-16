@@ -9,6 +9,7 @@ import time
 from config_handler import ConfigHandler
 
 CONFIG_PATH = 'etc/config.conf'
+RETRY_TIME = 15
 
 
 def _ComposeContractBuildPath(truffle_build_path, target_contract_name):
@@ -43,11 +44,11 @@ def _StartDeployToChain(config_handler, contract_inst):
     file_ipc = config_handler.get_chain_config('Ethereum', 'file_ipc')
     w3 = Web3(Web3.IPCProvider(file_ipc))
 
-    tx_hash = contract_inst.transact({'from': w3.eth.accounts[0], 'gas': 5000000})
+    tx_hash = contract_inst.transact({'from': w3.eth.accounts[0]})
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     w3.miner.start(1)
     retry_time = 0
-    while not tx_receipt and retry_time < 10:
+    while not tx_receipt and retry_time < RETRY_TIME:
         print('    wait for miner!')
         time.sleep(2)
         tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
@@ -98,12 +99,15 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
         raw_args = config_handler.get_chain_config(contract_name, 'args')
         return [int(raw_args.split()[0].strip()),
                 kargs['event_emitter_info']['contractAddress']]
+    elif contract_name == 'RecordHashStorageV0':
+        return []
     elif contract_name == 'EventEmitter':
         return []
     elif contract_name == 'ProvedCRUD':
         return []
     elif contract_name == 'RecordHash':
-        return [kargs['event_emitter_info']['contractAddress']]
+        return [kargs['event_emitter_info']['contractAddress'],
+                kargs['record_hash_storage_v0_info']['contractAddress']]
     elif contract_name == 'KeysRecord':
         return []
     else:
@@ -150,8 +154,10 @@ def deploy(config_path=CONFIG_PATH):
                            keys_record_info=keys_record_info,
                            proved_crud_info=proved_crud_info,
                            finalise_record_info=finalise_record_info)
+    record_hash_storage_v0_info = _DeploySmartContractV0(config_handler, 'RecordHashStorageV0')
     _DeploySmartContractV0(config_handler, 'RecordHash',
-                           event_emitter_info=event_emitter_info)
+                           event_emitter_info=event_emitter_info,
+                           record_hash_storage_v0_info=record_hash_storage_v0_info)
 
 
 def undeploy(config_path=CONFIG_PATH):
