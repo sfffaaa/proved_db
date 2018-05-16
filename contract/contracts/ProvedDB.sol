@@ -8,8 +8,6 @@ import {FinaliseRecord} from "./FinaliseRecord.sol";
 
 contract ProvedDB {
 
-	event submit_hash(bytes32 finalise_hash);
-
 	KeysRecord _keys_record;
 	ProvedCRUD _proved_crud;
 	FinaliseRecord _finalise_record;
@@ -46,12 +44,7 @@ contract ProvedDB {
     function Create(string input_key, string val) public {
 		_proved_crud.Create(input_key, val);
 		_keys_record.Create(input_key);
-		bool finalised = false;
-		bytes32 finalised_hash = 0;
-		(finalised, finalised_hash) = _finalise_record.Create(input_key, val);
-		if (true == finalised) {
-			emit submit_hash(finalised_hash);
-		}
+		_finalise_record.Create(input_key, val);
     }
 
     function Retrieve(string input_key) public constant returns (bool, bytes32) {
@@ -65,12 +58,7 @@ contract ProvedDB {
     function Update(string input_key, string val) public {
 		_proved_crud.Update(input_key, val);
 		_keys_record.UpdateCheck(input_key);
-		bool finalised = false;
-		bytes32 finalised_hash = 0;
-		(finalised, finalised_hash) = _finalise_record.Update(input_key, val);
-		if (true == finalised) {
-			emit submit_hash(finalised_hash);
-		}
+		_finalise_record.Update(input_key, val);
     }
 
     function Delete(string input_key) public {

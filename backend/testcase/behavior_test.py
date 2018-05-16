@@ -35,7 +35,7 @@ class TestBehavior(unittest.TestCase):
 
     def testBehaior(self):
         private_node = SubmitAndRecordChainNode(config_path=_TEST_CONFIG,
-                                                proved_db_callback_objs=[],
+                                                finalise_record_callback_objs=[],
                                                 record_hash_callback_objs=[],
                                                 wait_time=1)
         private_node.start()

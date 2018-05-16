@@ -38,7 +38,7 @@ contract FinaliseRecord {
 		return _submit_period <= _submit_list.length;
 	}
 
-	function Submit() private returns (bool, bytes32) {
+	function Submit() private returns (bool) {
 		uint hash = 0;
 		for (uint i = 0; i < _submit_list.length; i++) {
 			if (false == _submit_list[i].is_exist) {
@@ -57,8 +57,8 @@ contract FinaliseRecord {
 		}
 
 		_submit_list.length = 0;
-		//emit submit_hash(finalise_hash);
-		return (true, finalise_hash);
+		emit submit_hash(finalise_hash);
+		return true;
 	}
 
 	function Finalise(bytes32 finalise_hash) public {
@@ -117,16 +117,15 @@ contract FinaliseRecord {
 		bool finalised = false;
 		bytes32 finalised_hash = 0;
 		if (IsNeedSubmit()) {
-			(finalised, finalised_hash) = Submit();
+			require(true == Submit());
 		}
-		return (finalised, finalised_hash);
 	}
 
-    function Create(string input_key, string val) public returns (bool, bytes32) {
-		return CreateUpdateBaseAction(input_key, val, "create");
+    function Create(string input_key, string val) public {
+		CreateUpdateBaseAction(input_key, val, "create");
     }
 
-    function Update(string input_key, string val) public returns (bool, bytes32) {
-		return CreateUpdateBaseAction(input_key, val, "update");
+    function Update(string input_key, string val) public {
+		CreateUpdateBaseAction(input_key, val, "update");
     }
 }

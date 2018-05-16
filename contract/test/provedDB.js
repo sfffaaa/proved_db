@@ -1,4 +1,5 @@
 var ProvedDB = artifacts.require("ProvedDB");
+var FinaliseRecord = artifacts.require("FinaliseRecord");
 const BigNumber = require('bignumber.js');
 require('truffle-test-utils').init();
 
@@ -376,18 +377,20 @@ contract("ProvedDBSubmit", function(accounts) {
 
     it("Create, Update submit", async function() {
         var testKey = "test09";
-        var contract = await ProvedDB.deployed();
+        var finaliseRecordContract = await FinaliseRecord.deployed();
         var checkHash = GetSubmitHashSum([[testKey, TEST_DATA[testKey][0]],
                                           [testKey, TEST_DATA[testKey][1]]]);
+
+        var contract = await ProvedDB.deployed();
+        var checkEvent = finaliseRecordContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
+        checkEvent.watch(function (error, resp) {
+            assert.equal(resp.args.finalise_hash, checkHash, "event should be the same");
+            checkEvent.stopWatching();
+        });
+
         await contract.Create(testKey, TEST_DATA[testKey][0]);
 
         var result = await contract.Update(testKey, TEST_DATA[testKey][1]);
-        assert.web3Event(result, {
-            event: 'submit_hash',
-            args: {
-                finalise_hash: checkHash
-            }
-        }, 'The event is emitted');
         await contract.Finalise(checkHash);
     });
 
@@ -399,18 +402,29 @@ contract("ProvedDBSubmit", function(accounts) {
             var val = '' + (i + 0);
             testEntries.push(val);
         }
+        var finalAnswerHash = [];
+        for (var i = 0; i < testEntries.length; i += TEST_PERIOD) {
+            var checkHash = GetSubmitHashSum([['' + (i + 0), testEntries[i]],
+                                              ['' + (i + 1), testEntries[i + 1]]]);
+            finalAnswerHash.push(checkHash);
+        }
+        var finaliseRecordContract = await FinaliseRecord.deployed();
+        var checkEvent = finaliseRecordContract.submit_hash({fromBlock: 0, toBlock: 'latest'});
+        var checkIdx = 0;
+        checkEvent.watch(function (error, resp) {
+            assert.equal(resp.args.finalise_hash, finalAnswerHash[checkIdx], "event should be the same");
+            checkIdx++;
+            if (checkIdx === finalAnswerHash.length) {
+                checkEvent.stopWatching();
+            }
+        });
+
         var contract = await ProvedDB.deployed();
         for (var i = 0; i < testEntries.length; i += TEST_PERIOD) {
             var checkHash = GetSubmitHashSum([['' + (i + 0), testEntries[i]],
                                               ['' + (i + 1), testEntries[i + 1]]]);
             await contract.Create(testEntries[i], testEntries[i]);
-            var result = await contract.Create(testEntries[i + 1], testEntries[i + 1]);
-            assert.web3Event(result, {
-                event: 'submit_hash',
-                args: {
-                    finalise_hash: checkHash
-                }
-            }, 'The event is emitted');
+            await contract.Create(testEntries[i + 1], testEntries[i + 1]);
             await contract.Finalise(checkHash);
         }
     });

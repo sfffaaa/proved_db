@@ -11,15 +11,15 @@ class SubmitAndRecordChainNode(BaseChainNode):
 
     def __init__(self,
                  config_path=my_config.CONFIG_PATH,
-                 proved_db_callback_objs=[],
+                 finalise_record_callback_objs=[],
                  record_hash_callback_objs=[],
                  wait_time=3):
         self._record_hash_mgr = RecordHash(config_path)
         self._proved_db_mgr = ProvedDB(config_path, 'json')
-        proved_db_callback_objs = [self] + proved_db_callback_objs
+        finalise_record_callback_objs = [self] + finalise_record_callback_objs
         record_hash_callback_objs = [self] + record_hash_callback_objs
         super(SubmitAndRecordChainNode, self).__init__(config_path,
-                                                       proved_db_callback_objs,
+                                                       finalise_record_callback_objs,
                                                        record_hash_callback_objs,
                                                        wait_time)
 
