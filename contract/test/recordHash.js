@@ -1,18 +1,19 @@
 var RecordHash = artifacts.require("RecordHash");
-require('truffle-test-utils').init();
+var EventEmitter = artifacts.require("EventEmitter");
 
 contract("RecordHashBasicTest", function(accounts) {
 
     it("Record hash", async function() {
         var contract = await RecordHash.deployed();
         var hash = web3.sha3('show me the money');
+
+        var eventEmitterContract = await EventEmitter.deployed();
+        var checkEvent = eventEmitterContract.record_over({fromBlock: 0, toBlock: 'latest'});
+        checkEvent.watch(function (error, resp) {
+            assert.equal(resp.args.finalise_hash, hash, "event should be the same");
+            checkEvent.stopWatching();
+        });
         var result = await contract.Record(hash);
-        assert.web3Event(result, {
-            event: 'record_over',
-            args: {
-                finalise_hash: hash
-            }
-        }, 'The event is emitted');
     });
 
     it("Record hash", async function() {

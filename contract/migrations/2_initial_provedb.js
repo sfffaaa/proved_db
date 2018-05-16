@@ -3,6 +3,7 @@ var ProvedCRUD = artifacts.require("./ProvedCRUD");
 var KeysRecord = artifacts.require("./KeysRecord");
 var FinaliseRecord = artifacts.require("./FinaliseRecord");
 var EventEmitter = artifacts.require("./EventEmitter");
+var RecordHash = artifacts.require("./RecordHash");
 
 module.exports = function(deployer) {
     deployer.deploy(KeysRecord).then(function() {
@@ -18,5 +19,8 @@ module.exports = function(deployer) {
                                KeysRecord.address,
                                ProvedCRUD.address,
                                FinaliseRecord.address);
+    }).then(function() {
+        return deployer.deploy(RecordHash,
+                               EventEmitter.address);
     });
 };

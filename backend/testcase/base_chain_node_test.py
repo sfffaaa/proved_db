@@ -44,7 +44,7 @@ class TestPrivateNodeSingleMethods(unittest.TestCase):
     def testSingleEvent(self):
         private_node = BaseChainNode(config_path=_TEST_CONFIG,
                                      submit_hash_callback_objs=[self],
-                                     record_hash_callback_objs=[],
+                                     record_over_callback_objs=[],
                                      wait_time=1)
         private_node.start()
         test_db = ProvedDB(_TEST_CONFIG, 'json')
@@ -91,7 +91,7 @@ class TestPrivateNodeMultipleMethods(unittest.TestCase):
         test_db = ProvedDB(_TEST_CONFIG, 'json')
         private_node = BaseChainNode(config_path=_TEST_CONFIG,
                                      submit_hash_callback_objs=[self],
-                                     record_hash_callback_objs=[],
+                                     record_over_callback_objs=[],
                                      wait_time=1)
         private_node.start()
         for i in range(0, TEST_PAIR_PERIOD * TEST_PAIR_LENGTH, TEST_PAIR_PERIOD):
@@ -135,7 +135,7 @@ class TestPrivateNodeRecordHashMethods(unittest.TestCase):
         test_hash_mgr = RecordHash(_TEST_CONFIG)
         private_node = BaseChainNode(config_path=_TEST_CONFIG,
                                      submit_hash_callback_objs=[],
-                                     record_hash_callback_objs=[self],
+                                     record_over_callback_objs=[self],
                                      wait_time=1)
         private_node.start()
         check_hashes = []

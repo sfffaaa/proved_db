@@ -103,7 +103,7 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
     elif contract_name == 'ProvedCRUD':
         return []
     elif contract_name == 'RecordHash':
-        return []
+        return [kargs['event_emitter_info']['contractAddress']]
     elif contract_name == 'KeysRecord':
         return []
     else:
@@ -150,7 +150,8 @@ def deploy(config_path=CONFIG_PATH):
                            keys_record_info=keys_record_info,
                            proved_crud_info=proved_crud_info,
                            finalise_record_info=finalise_record_info)
-    _DeploySmartContractV0(config_handler, 'RecordHash')
+    _DeploySmartContractV0(config_handler, 'RecordHash',
+                           event_emitter_info=event_emitter_info)
 
 
 def undeploy(config_path=CONFIG_PATH):

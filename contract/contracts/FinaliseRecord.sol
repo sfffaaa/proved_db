@@ -116,8 +116,6 @@ contract FinaliseRecord {
 
 
 		_submit_list.push(SubmitEntry(true, entry));
-		bool finalised = false;
-		bytes32 finalised_hash = 0;
 		if (IsNeedSubmit()) {
 			require(true == Submit());
 		}

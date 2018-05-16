@@ -1,7 +1,6 @@
 var ProvedDB = artifacts.require("ProvedDB");
 var EventEmitter = artifacts.require("EventEmitter");
 const BigNumber = require('bignumber.js');
-require('truffle-test-utils').init();
 
 var NON_EXIST_KEY = "aabbccddeeff";
 var TEST_DATA = {
