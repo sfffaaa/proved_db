@@ -47,10 +47,6 @@ contract ProvedDB {
 		_keys_record = KeysRecord(keys_record_addr);
     }
 
-	function HashPair(string key, string val) private pure returns (bytes32) {
-		uint uint_hash = uint(keccak256(key)) + uint(keccak256(val));
-		return keccak256(uint_hash);
-	}
 
 	function IsNeedSubmit() private view returns (bool) {
 		return _submit_period <= _submit_list.length;
@@ -127,7 +123,7 @@ contract ProvedDB {
     function Create(string input_key, string val) public {
 		assert(false == _kv_hash_map[input_key].is_exist);
 
-		bytes32 hash = HashPair(input_key, val);
+		bytes32 hash = input_key.hashPair(val);
 		Entry memory entry = Entry("create", hash);
 		_kv_hash_map[input_key].is_exist = true;
 		_kv_hash_map[input_key].entries.push(entry);
@@ -158,7 +154,7 @@ contract ProvedDB {
 		assert(true == _kv_hash_map[input_key].is_exist);
 		_keys_record.UpdateCheck(input_key);
 
-		bytes32 hash = HashPair(input_key, val);
+		bytes32 hash = input_key.hashPair(val);
 		Entry memory entry = Entry("update", hash);
 		_kv_hash_map[input_key].entries.push(entry);
 
@@ -190,7 +186,7 @@ contract ProvedDB {
 				return false;
 			}
 		}
-		if (hash == HashPair(input_key, val)) {
+		if (hash == input_key.hashPair(val)) {
 			return true;
 		}
 		return false;

@@ -19,9 +19,16 @@ library Strings {
                 return false;
             }
         }
-
         return true;
     }
+	function hashPair(string _base, string _value)
+		pure
+		internal
+		returns (bytes32) {
+		uint uint_hash = uint(keccak256(_base)) + uint(keccak256(_value));
+		return keccak256(uint_hash);
+	}
+
 }
 
 
