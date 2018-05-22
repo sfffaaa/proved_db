@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
 import {EventEmitter} from "./EventEmitter.sol";
-import {FinaliseRecordStorageV0} from "./FinaliseRecordStorageV0.sol";
+import {FinaliseRecordStorageInterface} from "./FinaliseRecordStorageInterface.sol";
 
 contract FinaliseRecord {
 	using Strings for string;
@@ -31,7 +31,7 @@ contract FinaliseRecord {
 
 	SubmitEntry[] _submit_list;
 	EventEmitter _event_emitter;
-	FinaliseRecordStorageV0 _finalise_record_storage;
+	FinaliseRecordStorageInterface _finalise_record_storage;
 
     constructor(uint submit_period,
 				address event_emitter_addr,
@@ -39,7 +39,7 @@ contract FinaliseRecord {
 		public {
 		_submit_period = submit_period;
 		_event_emitter = EventEmitter(event_emitter_addr);
-		_finalise_record_storage = FinaliseRecordStorageV0(finalise_record_storage_addr);
+		_finalise_record_storage = FinaliseRecordStorageInterface(finalise_record_storage_addr);
     }
 
 	function IsNeedSubmit() private view returns (bool) {

@@ -4,13 +4,13 @@ contract RecordHashStorageV0 {
     mapping(bytes32 => bool) _record_map;
 
 	function Set(bytes32 record_hash)
-		public
+		external
 	{
 		_record_map[record_hash] = true;
 	}
 
 	function Get(bytes32 record_hash)
-		public
+		external
 		view
 		returns (bool)
 	{
