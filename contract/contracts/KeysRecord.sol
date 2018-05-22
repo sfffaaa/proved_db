@@ -1,15 +1,15 @@
 pragma solidity ^0.4.23;
 
-import {KeysRecordStorageV0} from "./KeysRecordStorageV0.sol";
+import {KeysRecordStorageInterface} from "./KeysRecordStorageInterface.sol";
 
 contract KeysRecord {
 
-	KeysRecordStorageV0 _keys_record_stroage;
+	KeysRecordStorageInterface _keys_record_stroage;
 
 	constructor(address keys_record_storage_addr)
 		public
 	{
-		_keys_record_stroage = KeysRecordStorageV0(keys_record_storage_addr);
+		_keys_record_stroage = KeysRecordStorageInterface(keys_record_storage_addr);
 	}
 
     function Create(string input_key) public {

@@ -10,14 +10,14 @@ contract KeysRecordStorageV0 {
 	string[] _keys;
 	mapping(string => uint) _key_idxa1_map;
 
-    function PushKeyRecord(string input_key) public {
+    function PushKeyRecord(string input_key) external {
 		assert(0 == _key_idxa1_map[input_key]);
 		_keys.push(input_key);
 		_key_idxa1_map[input_key] = _keys.length;
 	}
 
     function GetKeyIdx(string input_key)
-		public
+		external
 		view
 		returns (bool, uint) {
 		if (0 == _key_idxa1_map[input_key]) {
@@ -28,7 +28,7 @@ contract KeysRecordStorageV0 {
 		}
 	}
 
-    function DeleteKey(string input_key) public {
+    function DeleteKey(string input_key) external {
 		if (0 == _key_idxa1_map[input_key]) {
 			return;
 		}
