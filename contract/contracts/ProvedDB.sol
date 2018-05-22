@@ -51,13 +51,17 @@ contract ProvedDB {
 		bool rexist;
 		bytes32 rdata;
 		(rexist, rdata) = _proved_crud.Retrieve(input_key);
-		_keys_record.RetrieveCheck(input_key, rexist);
+		if (true == rexist) {
+			_keys_record.ExistedCheck(input_key);
+		} else {
+			_keys_record.NonExistedCheck(input_key);
+		}
 		return (rexist, rdata);
     }
     
     function Update(string input_key, string val) public {
 		_proved_crud.Update(input_key, val);
-		_keys_record.UpdateCheck(input_key);
+		_keys_record.ExistedCheck(input_key);
 		_finalise_record.Update(input_key, val);
     }
 
@@ -71,11 +75,11 @@ contract ProvedDB {
 		return _proved_crud.CheckEntry(input_key, val);
 	}
 
-	function GetKeysLength() public constant returns (uint) {
+	function GetKeysLength() public view returns (uint) {
 		return _keys_record.GetKeysLength();
 	}
 
-	function GetKey(uint idx) public constant returns (string) {
+	function GetKey(uint idx) public view returns (string) {
 		return _keys_record.GetKey(idx);
 	}
 }

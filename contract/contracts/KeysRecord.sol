@@ -1,50 +1,43 @@
 pragma solidity ^0.4.23;
 
-import {Strings} from "./strings.sol";
+import {KeysRecordStorageV0} from "./KeysRecordStorageV0.sol";
 
 contract KeysRecord {
 
-	using Strings for string;
+	KeysRecordStorageV0 _keys_record_stroage;
 
-	string[] _keys;
-	mapping(string => uint) _key_idxa1_map;
+	constructor(address keys_record_storage_addr)
+		public
+	{
+		_keys_record_stroage = KeysRecordStorageV0(keys_record_storage_addr);
+	}
 
     function Create(string input_key) public {
-		assert(0 == _key_idxa1_map[input_key]);
-		_keys.push(input_key);
-		_key_idxa1_map[input_key] = _keys.length;
+		_keys_record_stroage.PushKeyRecord(input_key);
 	}
-    function RetrieveCheck(string input_key, bool is_exist) public constant {
-		if (false == is_exist) {
-			assert(0 == _key_idxa1_map[input_key]);
-		} else {
-			assert(0 != _key_idxa1_map[input_key]);
-			assert(true == input_key.compareTo(_keys[_key_idxa1_map[input_key] - 1]));
-		}
+
+	function NonExistedCheck(string input_key) public view {
+		bool success;
+		uint idx;
+		(success, idx) = _keys_record_stroage.GetKeyIdx(input_key);
+		assert(false == success);
 	}
-    function UpdateCheck(string input_key) public constant {
-		assert(0 != _key_idxa1_map[input_key]);
-		assert(true == input_key.compareTo(_keys[_key_idxa1_map[input_key] - 1]));
+    function ExistedCheck(string input_key) public view {
+		bool success;
+		uint idx;
+		(success, idx) = _keys_record_stroage.GetKeyIdx(input_key);
+		assert(true == success);
 	}
     function Delete(string input_key) public {
-		assert(0 != _key_idxa1_map[input_key]);
-		assert(true == input_key.compareTo(_keys[_key_idxa1_map[input_key] - 1]));
-		uint remove_idx = _key_idxa1_map[input_key] - 1;
-		uint last_idx = _keys.length - 1;
-		if (remove_idx != last_idx) {
-			string memory last_key = _keys[last_idx];
-			_keys[remove_idx] = last_key;
-			_key_idxa1_map[last_key] = remove_idx + 1;
-		}
-		_key_idxa1_map[input_key] = 0;
-		_keys.length--;
+		ExistedCheck(input_key);
+		_keys_record_stroage.DeleteKey(input_key);
 	}
 
-	function GetKeysLength() external constant returns (uint) {
-		return _keys.length;
+	function GetKeysLength() external view returns (uint) {
+		return _keys_record_stroage.GetKeysLength();
 	}
 
-	function GetKey(uint idx) external constant returns (string) {
-		return _keys[idx];
+	function GetKey(uint idx) external view returns (string) {
+		return _keys_record_stroage.GetKey(idx);
 	}
 }

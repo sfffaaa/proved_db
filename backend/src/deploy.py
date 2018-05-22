@@ -100,6 +100,8 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
         return [int(raw_args.split()[0].strip()),
                 kargs['event_emitter_info']['contractAddress'],
                 kargs['finalise_record_storage_v0_info']['contractAddress']]
+    elif contract_name == 'KeysRecordStorageV0':
+        return []
     elif contract_name == 'RecordHashStorageV0':
         return []
     elif contract_name == 'EventEmitter':
@@ -112,7 +114,7 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
         return [kargs['event_emitter_info']['contractAddress'],
                 kargs['record_hash_storage_v0_info']['contractAddress']]
     elif contract_name == 'KeysRecord':
-        return []
+        return [kargs['keys_record_storage_v0_info']['contractAddress']]
     else:
         raise IOError('Wrong contract name {0}'.format(contract_name))
 
@@ -147,7 +149,9 @@ def deploy(config_path=CONFIG_PATH):
     print('run command {0}'.format(cmd))
     os.system(cmd)
 
-    keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord')
+    keys_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'KeysRecordStorageV0')
+    keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord',
+                                              keys_record_storage_v0_info=keys_record_storage_v0_info)
     proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD')
     event_emitter_info = _DeploySmartContractV0(config_handler, 'EventEmitter')
     finalise_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'FinaliseRecordStorageV0')
