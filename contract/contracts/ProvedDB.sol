@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
+import {Register} from "./Register.sol";
 import {KeysRecord} from "./KeysRecord.sol";
 import {ProvedCRUD} from "./ProvedCRUD.sol";
 import {FinaliseRecord} from "./FinaliseRecord.sol";
@@ -8,78 +9,97 @@ import {FinaliseRecord} from "./FinaliseRecord.sol";
 
 contract ProvedDB {
 
-	KeysRecord _keys_record;
-	ProvedCRUD _proved_crud;
-	FinaliseRecord _finalise_record;
+	Register _register;
 
-    constructor(address keys_record_addr,
-				address proved_crud_addr,
-				address finalise_record_addr)
+    constructor(address register_address)
 	public {
-		_keys_record = KeysRecord(keys_record_addr);
-		_proved_crud = ProvedCRUD(proved_crud_addr);
-		_finalise_record = FinaliseRecord(finalise_record_addr);
+		_register = Register(register_address);
     }
 
+	function GetKeyRecordInst()
+		private
+		view
+		returns (KeysRecord)
+	{
+		return KeysRecord(_register.GetInst("KeysRecord"));
+	}
+
+	function GetProvedCRUDInst()
+		private
+		view
+		returns (ProvedCRUD)
+	{
+		return ProvedCRUD(_register.GetInst("ProvedCRUD"));
+	}
+
+	function GetFinaliseRecordInst()
+		private
+		view
+		returns (FinaliseRecord)
+	{
+		return FinaliseRecord(_register.GetInst("FinaliseRecord"));
+	}
+
 	function Finalise(bytes32 finalise_hash) public {
-		_finalise_record.Finalise(finalise_hash);
+		GetFinaliseRecordInst().Finalise(finalise_hash);
 	}
 
 	function GetFinalisedGroupEntriesLength(bytes32 kv_hash) public view returns (bool, uint) {
-		return _finalise_record.GetFinalisedGroupEntriesLength(kv_hash);
+		return GetFinaliseRecordInst().GetFinalisedGroupEntriesLength(kv_hash);
 	}
 
 	function GetFinalisedGroupEntry(bytes32 kv_hash, uint idx) public view returns (bytes32) {
-		return _finalise_record.GetFinalisedGroupEntry(kv_hash, idx);
+		return GetFinaliseRecordInst().GetFinalisedGroupEntry(kv_hash, idx);
 	}
 
 	function GetFinaliseEntriesLength(bytes32 finalise_hash) public view returns (bool, bool, uint) {
-		return _finalise_record.GetFinaliseEntriesLength(finalise_hash);
+		return GetFinaliseRecordInst().GetFinaliseEntriesLength(finalise_hash);
 	}
 
 	function GetFinaliseEntry(bytes32 finalise_hash, uint index) public view returns(bytes32) {
-		return _finalise_record.GetFinaliseEntry(finalise_hash, index);
+		return GetFinaliseRecordInst().GetFinaliseEntry(finalise_hash, index);
 	}
 
     function Create(string input_key, string val) public {
-		_proved_crud.Create(input_key, val);
-		_keys_record.Create(input_key);
-		_finalise_record.Create(input_key, val);
+		GetProvedCRUDInst().Create(input_key, val);
+		GetKeyRecordInst().Create(input_key);
+		GetFinaliseRecordInst().Create(input_key, val);
     }
 
     function Retrieve(string input_key) public constant returns (bool, bytes32) {
+		KeysRecord keys_record_inst = GetKeyRecordInst();
 		bool rexist;
 		bytes32 rdata;
-		(rexist, rdata) = _proved_crud.Retrieve(input_key);
+		(rexist, rdata) = GetProvedCRUDInst().Retrieve(input_key);
 		if (true == rexist) {
-			_keys_record.ExistedCheck(input_key);
+			keys_record_inst.ExistedCheck(input_key);
 		} else {
-			_keys_record.NonExistedCheck(input_key);
+			keys_record_inst.NonExistedCheck(input_key);
 		}
 		return (rexist, rdata);
     }
     
     function Update(string input_key, string val) public {
-		_proved_crud.Update(input_key, val);
-		_keys_record.ExistedCheck(input_key);
-		_finalise_record.Update(input_key, val);
+		GetProvedCRUDInst().Update(input_key, val);
+		GetKeyRecordInst().ExistedCheck(input_key);
+		GetFinaliseRecordInst().Update(input_key, val);
     }
 
     function Delete(string input_key) public {
-		if (true == _proved_crud.Delete(input_key)) {
-			_keys_record.Delete(input_key);
+		if (true == GetProvedCRUDInst().Delete(input_key)) {
+			GetKeyRecordInst().Delete(input_key);
 		}
 	}
 
 	function CheckEntry(string input_key, string val) public constant returns (bool) {
-		return _proved_crud.CheckEntry(input_key, val);
+		return GetProvedCRUDInst().CheckEntry(input_key, val);
 	}
 
 	function GetKeysLength() public view returns (uint) {
-		return _keys_record.GetKeysLength();
+		return GetKeyRecordInst().GetKeysLength();
 	}
 
 	function GetKey(uint idx) public view returns (string) {
-		return _keys_record.GetKey(idx);
+		return GetKeyRecordInst().GetKey(idx);
 	}
 }

@@ -1,33 +1,41 @@
 pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
-import {ProvedCRUDStorageV0} from "./ProvedCRUDStorageV0.sol";
+import {Register} from "./Register.sol";
+import {ProvedCRUDStorageInterface} from "./ProvedCRUDStorageInterface.sol";
 
 contract ProvedCRUD {
 	using Strings for string;
 
-	ProvedCRUDStorageV0 _proved_crud_storage;
-	constructor(address proved_crud_storage_addr)
+	Register _register;
+	constructor(address register_addr)
 		public
 	{
-		_proved_crud_storage = ProvedCRUDStorageV0(proved_crud_storage_addr);
+		_register = Register(register_addr);
+	}
+
+	function GetStorageInterface()
+		private
+		view
+		returns (ProvedCRUDStorageInterface) {
+		return ProvedCRUDStorageInterface(_register.GetInst("ProvedCRUDStorageInterface"));
 	}
 
 	function Create(string input_key, string val) public {
 		bytes32 hash = input_key.hashPair(val);
-		_proved_crud_storage.Create(input_key, hash);
+		GetStorageInterface().Create(input_key, hash);
     }
 	function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
-		return _proved_crud_storage.Retrieve(input_key);
+		return GetStorageInterface().Retrieve(input_key);
     }
 
     function Update(string input_key, string val) public {
 		bytes32 hash = input_key.hashPair(val);
-		_proved_crud_storage.Update(input_key, hash);
+		GetStorageInterface().Update(input_key, hash);
     }
 
     function Delete(string input_key) public returns (bool) {
-		return _proved_crud_storage.Delete(input_key);
+		return GetStorageInterface().Delete(input_key);
 	}
 
 	function CheckEntry(string input_key, string val) public constant returns (bool) {

@@ -1,27 +1,38 @@
 pragma solidity ^0.4.23;
 
+import {Register} from "./Register.sol";
 import {EventEmitter} from "./EventEmitter.sol";
-// [TODO] Wait for registry contract
 import {RecordHashStorageInterface} from "./RecordHashStorageInterface.sol";
 
 contract RecordHash {
 
-	EventEmitter _event_emitter;
-	RecordHashStorageInterface _record_hash_stroage;
+	Register _register;
 
-	constructor(address event_emitter_addr,
-				address record_hash_storage_addr)
+	constructor(address register_address)
 		public
 	{
-		_event_emitter = EventEmitter(event_emitter_addr);
-		_record_hash_stroage = RecordHashStorageInterface(record_hash_storage_addr);
+		_register = Register(register_address);
+	}
+
+	function GetEventEmitter()
+		private
+		view
+		returns (EventEmitter) {
+		return EventEmitter(_register.GetInst("EventEmitter"));
+	}
+
+	function GetStorageInterface()
+		private
+		view
+		returns (RecordHashStorageInterface) {
+		return RecordHashStorageInterface(_register.GetInst("RecordHashStorageInterface"));
 	}
 
 	function Record(bytes32 record_hash)
 		public
 	{
-		_record_hash_stroage.Set(record_hash);
-		_event_emitter.emit_record_over(record_hash);
+		GetStorageInterface().Set(record_hash);
+		GetEventEmitter().emit_record_over(record_hash);
 	}
 
 	function Get(bytes32 record_hash)
@@ -29,6 +40,6 @@ contract RecordHash {
 		view
 		returns(bool)
 	{
-		return _record_hash_stroage.Get(record_hash);
+		return GetStorageInterface().Get(record_hash);
 	}
 }
