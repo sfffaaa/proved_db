@@ -7,9 +7,10 @@ from web3 import Web3
 import hexbytes
 import time
 from config_handler import ConfigHandler
+from register import Register
 
 CONFIG_PATH = 'etc/config.conf'
-RETRY_TIME = 15
+RETRY_TIME = 60
 
 
 def _ComposeContractBuildPath(truffle_build_path, target_contract_name):
@@ -40,25 +41,32 @@ def _DumpContractInfo(contract_path, contract_detail, contract_owner, file_path)
         json.dump(json_data, f)
 
 
-def _StartDeployToChain(config_handler, contract_inst):
+def _StartMultipleDeployToChain(config_handler, contract_dict):
     file_ipc = config_handler.get_chain_config('Ethereum', 'file_ipc')
     w3 = Web3(Web3.IPCProvider(file_ipc))
 
-    tx_hash = contract_inst.transact({'from': w3.eth.accounts[0]})
-    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+    contract_tx_hash = {}
+    for contract_name, contract_inst in contract_dict.items():
+        tx_hash = contract_inst.transact({'from': w3.eth.accounts[0]})
+        contract_tx_hash[contract_name] = tx_hash
+
+    tx_receipts = {contract_name: w3.eth.getTransactionReceipt(tx_hash)
+                   for contract_name, tx_hash in contract_tx_hash.items()}
     w3.miner.start(1)
     retry_time = 0
-    while not tx_receipt and retry_time < RETRY_TIME:
+    while None in tx_receipts.values() and retry_time < RETRY_TIME:
         print('    wait for miner!')
         time.sleep(2)
-        tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+        tx_receipts = {contract_name: w3.eth.getTransactionReceipt(tx_hash)
+                       for contract_name, tx_hash in contract_tx_hash.items()}
         retry_time += 1
+        print("wait...")
 
     w3.miner.stop()
-    if not tx_receipt:
+    if None in tx_receipts.values():
         raise IOError('still cannot get contract result')
 
-    return tx_receipt, w3.eth.accounts[0]
+    return tx_receipts, w3.eth.accounts[0]
 
 
 def _GetContractInstance(config_handler, contract_name):
@@ -76,30 +84,30 @@ def _GetContractInstance(config_handler, contract_name):
     return w3.eth.contract(abi=abi, bytecode=bytecode)
 
 
-def _DumpSmartContract(config_handler, contract_name, contract_detail, contract_owner):
-    contract_path = _ComposeContractBuildPath(config_handler.get_chain_config('Deploy', 'truffle_build_path'),
-                                              contract_name)
-    assert os.path.isfile(contract_path), 'file compiled path {0} doesn\'t exist'.format(contract_path)
+def _DumpMultipleSmartContract(config_handler, contract_detail_dict, contract_owner):
+    for contract_name, contract_detail in contract_detail_dict.items():
+        contract_path = _ComposeContractBuildPath(config_handler.get_chain_config('Deploy', 'truffle_build_path'),
+                                                  contract_name)
+        assert os.path.isfile(contract_path), 'file compiled path {0} doesn\'t exist'.format(contract_path)
 
-    output_path = os.path.join(config_handler.get_chain_config('Output', 'file_path'),
-                               '{0}.json'.format(contract_name))
+        output_path = os.path.join(config_handler.get_chain_config('Output', 'file_path'),
+                                   '{0}.json'.format(contract_name))
 
-    _DumpContractInfo(contract_path,
-                      contract_detail,
-                      contract_owner,
-                      output_path)
+        _DumpContractInfo(contract_path,
+                          contract_detail,
+                          contract_owner,
+                          output_path)
 
 
-def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
+def _ComposeSmartContractArgs(config_handler, contract_name, my_args):
     if contract_name == 'ProvedDB':
-        return [kargs['keys_record_info']['contractAddress'],
-                kargs['proved_crud_info']['contractAddress'],
-                kargs['finalise_record_info']['contractAddress']]
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'FinaliseRecord':
         raw_args = config_handler.get_chain_config(contract_name, 'args')
         return [int(raw_args.split()[0].strip()),
-                kargs['event_emitter_info']['contractAddress'],
-                kargs['finalise_record_storage_v0_info']['contractAddress']]
+                my_args['Register']['contractAddress']]
+    elif contract_name == 'Register':
+        return []
     elif contract_name == 'ProvedCRUDStorageV0':
         return []
     elif contract_name == 'KeysRecordStorageV0':
@@ -109,37 +117,45 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
     elif contract_name == 'EventEmitter':
         return []
     elif contract_name == 'ProvedCRUD':
-        return [kargs['proved_crud_storage_v0_info']['contractAddress']]
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'FinaliseRecordStorageV0':
         return []
     elif contract_name == 'RecordHash':
-        return [kargs['event_emitter_info']['contractAddress'],
-                kargs['record_hash_storage_v0_info']['contractAddress']]
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'KeysRecord':
-        return [kargs['keys_record_storage_v0_info']['contractAddress']]
+        return [my_args['Register']['contractAddress']]
     else:
         raise IOError('Wrong contract name {0}'.format(contract_name))
 
 
-def _DeploySmartContractV0(config_handler, contract_name, **kargs):
-    print('==== Deploy started {0} ===='.format(contract_name))
-    my_args = _ComposeSmartContractArgs(config_handler, contract_name, **kargs)
+def _ShowMultipleSmartContractDetail(contract_detail_dict, contract_owner):
+    for contract_name, contract_detail in contract_detail_dict.items():
+        print('==== Deploy finished {0} ===='.format(contract_name))
+        print('Contract detail:')
+        for k, v in contract_detail.items():
+            if type(v) is hexbytes.main.HexBytes:
+                print('    {0}: {1}'.format(k, Web3.toHex(v)))
+            else:
+                print('    {0}: {1}'.format(k, v))
+        print('Contract owner:')
+        print('    owner: {0}'.format(contract_owner))
 
-    contract_inst = _GetContractInstance(config_handler, contract_name)
-    contract_inst = contract_inst.constructor(*my_args)
-    contract_detail, contract_owner = _StartDeployToChain(config_handler, contract_inst)
-    _DumpSmartContract(config_handler, contract_name, contract_detail, contract_owner)
 
-    print('==== Deploy finished {0} ===='.format(contract_name))
-    print('Contract detail:')
-    for k, v in contract_detail.items():
-        if type(v) is hexbytes.main.HexBytes:
-            print('    {0}: {1}'.format(k, Web3.toHex(v)))
-        else:
-            print('    {0}: {1}'.format(k, v))
-    print('Contract owner:')
-    print('    owner: {0}'.format(contract_owner))
-    return contract_detail
+def _DeployMultipleSmartContractV0(config_handler, infos):
+    contract_insts = {}
+    for contract_name, my_args in infos.items():
+        print('==== Deploy started {0} ===='.format(contract_name))
+        my_args = _ComposeSmartContractArgs(config_handler, contract_name, my_args)
+
+        contract_inst = _GetContractInstance(config_handler, contract_name)
+        contract_inst = contract_inst.constructor(*my_args)
+        contract_insts[contract_name] = contract_inst
+
+    contract_detail_dict, contract_owner = _StartMultipleDeployToChain(config_handler, contract_insts)
+    _DumpMultipleSmartContract(config_handler, contract_detail_dict, contract_owner)
+
+    _ShowMultipleSmartContractDetail(contract_detail_dict, contract_owner)
+    return contract_detail_dict
 
 
 def deploy(config_path=CONFIG_PATH):
@@ -151,26 +167,38 @@ def deploy(config_path=CONFIG_PATH):
     print('run command {0}'.format(cmd))
     os.system(cmd)
 
-    keys_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'KeysRecordStorageV0')
-    keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord',
-                                              keys_record_storage_v0_info=keys_record_storage_v0_info)
-    proved_crud_storage_v0_info = _DeploySmartContractV0(config_handler, 'ProvedCRUDStorageV0')
-    proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD',
-                                              proved_crud_storage_v0_info=proved_crud_storage_v0_info)
-    event_emitter_info = _DeploySmartContractV0(config_handler, 'EventEmitter')
-    finalise_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'FinaliseRecordStorageV0')
-    finalise_record_info = _DeploySmartContractV0(config_handler,
-                                                  'FinaliseRecord',
-                                                  event_emitter_info=event_emitter_info,
-                                                  finalise_record_storage_v0_info=finalise_record_storage_v0_info)
-    _DeploySmartContractV0(config_handler, 'ProvedDB',
-                           keys_record_info=keys_record_info,
-                           proved_crud_info=proved_crud_info,
-                           finalise_record_info=finalise_record_info)
-    record_hash_storage_v0_info = _DeploySmartContractV0(config_handler, 'RecordHashStorageV0')
-    _DeploySmartContractV0(config_handler, 'RecordHash',
-                           event_emitter_info=event_emitter_info,
-                           record_hash_storage_v0_info=record_hash_storage_v0_info)
+    # step 1
+    step_one_info = _DeployMultipleSmartContractV0(config_handler, {
+        'Register': {}
+    })
+
+    # step 2
+    register_info = step_one_info['Register']
+    infos = _DeployMultipleSmartContractV0(config_handler, {
+        'KeysRecordStorageV0': {},
+        'KeysRecord': {'Register': register_info},
+        'ProvedCRUDStorageV0': {},
+        'ProvedCRUD': {'Register': register_info},
+        'EventEmitter': {},
+        'FinaliseRecordStorageV0': {},
+        'FinaliseRecord': {'Register': register_info},
+        'ProvedDB': {'Register': register_info},
+        'RecordHashStorageV0': {},
+        'RecordHash': {'Register': register_info}
+    })
+
+    # step 3
+    register = Register(config_path)
+    register.set_multiple_register({
+        'EventEmitter': infos['EventEmitter']['contractAddress'],
+        'ProvedCRUDStorageInterface': infos['ProvedCRUDStorageV0']['contractAddress'],
+        'KeysRecordStorageInterface': infos['KeysRecordStorageV0']['contractAddress'],
+        'FinaliseRecordInterface': infos['FinaliseRecordStorageV0']['contractAddress'],
+        'RecordHashStorageInterface': infos['RecordHashStorageV0']['contractAddress'],
+        'KeysRecord': infos['KeysRecord']['contractAddress'],
+        'ProvedCRUD': infos['ProvedCRUD']['contractAddress'],
+        'FinaliseRecord': infos['FinaliseRecord']['contractAddress']
+    })
 
 
 def undeploy(config_path=CONFIG_PATH):
