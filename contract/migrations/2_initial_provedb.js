@@ -7,11 +7,15 @@ var RecordHash = artifacts.require("./RecordHash");
 var RecordHashStorageV0 = artifacts.require("./RecordHashStorageV0");
 var FinaliseRecordStorageV0 = artifacts.require("./FinaliseRecordStorageV0");
 var KeysRecordStorageV0 = artifacts.require("./KeysRecordStorageV0");
+var ProvedCRUDStorageV0 = artifacts.require("./ProvedCRUDStorageV0");
 
 
 module.exports = function(deployer) {
-    deployer.deploy(ProvedCRUD).then(function() {
-        return deployer.deploy(EventEmitter);
+    deployer.deploy(EventEmitter).then(function() {
+        return deployer.deploy(ProvedCRUDStorageV0);
+    }).then(function() {
+        return deployer.deploy(ProvedCRUD,
+                               ProvedCRUDStorageV0.address);
     }).then(function() {
         return deployer.deploy(KeysRecordStorageV0);
     }).then(function() {

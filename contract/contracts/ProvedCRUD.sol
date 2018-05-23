@@ -1,54 +1,33 @@
 pragma solidity ^0.4.23;
 
 import {Strings} from "./strings.sol";
+import {ProvedCRUDStorageV0} from "./ProvedCRUDStorageV0.sol";
 
 contract ProvedCRUD {
 	using Strings for string;
 
-	struct Entry {
-		string action;
-		bytes32 hash_value;
-	}
-	struct Record {
-		bool is_exist;
-		Entry[] entries;
+	ProvedCRUDStorageV0 _proved_crud_storage;
+	constructor(address proved_crud_storage_addr)
+		public
+	{
+		_proved_crud_storage = ProvedCRUDStorageV0(proved_crud_storage_addr);
 	}
 
-    mapping(string => Record) _kv_hash_map;
 	function Create(string input_key, string val) public {
-		assert(false == _kv_hash_map[input_key].is_exist);
-
 		bytes32 hash = input_key.hashPair(val);
-		Entry memory entry = Entry("create", hash);
-		_kv_hash_map[input_key].is_exist = true;
-		_kv_hash_map[input_key].entries.push(entry);
+		_proved_crud_storage.Create(input_key, hash);
     }
 	function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
-		if (false == _kv_hash_map[input_key].is_exist) {
-			return (false, 0);
-		}
-
-		assert(0 != _kv_hash_map[input_key].entries.length);
-
-		uint entry_len = _kv_hash_map[input_key].entries.length - 1;
-		return (true, _kv_hash_map[input_key].entries[entry_len].hash_value);
+		return _proved_crud_storage.Retrieve(input_key);
     }
 
     function Update(string input_key, string val) public {
-		assert(true == _kv_hash_map[input_key].is_exist);
-
 		bytes32 hash = input_key.hashPair(val);
-		Entry memory entry = Entry("update", hash);
-		_kv_hash_map[input_key].entries.push(entry);
+		_proved_crud_storage.Update(input_key, hash);
     }
 
     function Delete(string input_key) public returns (bool) {
-		if (false == _kv_hash_map[input_key].is_exist) {
-			return false;
-		}
-		_kv_hash_map[input_key].is_exist = false;
-		_kv_hash_map[input_key].entries.push(Entry("delete", keccak256("")));
-		return true;
+		return _proved_crud_storage.Delete(input_key);
 	}
 
 	function CheckEntry(string input_key, string val) public constant returns (bool) {

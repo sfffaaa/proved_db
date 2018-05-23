@@ -100,6 +100,8 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
         return [int(raw_args.split()[0].strip()),
                 kargs['event_emitter_info']['contractAddress'],
                 kargs['finalise_record_storage_v0_info']['contractAddress']]
+    elif contract_name == 'ProvedCRUDStorageV0':
+        return []
     elif contract_name == 'KeysRecordStorageV0':
         return []
     elif contract_name == 'RecordHashStorageV0':
@@ -107,7 +109,7 @@ def _ComposeSmartContractArgs(config_handler, contract_name, **kargs):
     elif contract_name == 'EventEmitter':
         return []
     elif contract_name == 'ProvedCRUD':
-        return []
+        return [kargs['proved_crud_storage_v0_info']['contractAddress']]
     elif contract_name == 'FinaliseRecordStorageV0':
         return []
     elif contract_name == 'RecordHash':
@@ -152,7 +154,9 @@ def deploy(config_path=CONFIG_PATH):
     keys_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'KeysRecordStorageV0')
     keys_record_info = _DeploySmartContractV0(config_handler, 'KeysRecord',
                                               keys_record_storage_v0_info=keys_record_storage_v0_info)
-    proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD')
+    proved_crud_storage_v0_info = _DeploySmartContractV0(config_handler, 'ProvedCRUDStorageV0')
+    proved_crud_info = _DeploySmartContractV0(config_handler, 'ProvedCRUD',
+                                              proved_crud_storage_v0_info=proved_crud_storage_v0_info)
     event_emitter_info = _DeploySmartContractV0(config_handler, 'EventEmitter')
     finalise_record_storage_v0_info = _DeploySmartContractV0(config_handler, 'FinaliseRecordStorageV0')
     finalise_record_info = _DeploySmartContractV0(config_handler,
