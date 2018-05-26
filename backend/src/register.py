@@ -19,6 +19,12 @@ class Register():
     def get_register(self, name):
         return self._onchain_handler.get_register(name)
 
+    def set_whitelist(self, address):
+        self._onchain_handler.set_whitelist(address)
+
+    def set_multiple_whitelist(self, addresses):
+        self._onchain_handler.set_multiple_whitelist(addresses)
+
 
 if __name__ == '__main__':
     Register()

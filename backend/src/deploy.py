@@ -200,6 +200,13 @@ def deploy(config_path=CONFIG_PATH):
         'FinaliseRecord': infos['FinaliseRecord']['contractAddress']
     })
 
+    # step 4
+    register.set_multiple_whitelist([infos['RecordHash']['contractAddress'],
+                                     infos['ProvedDB']['contractAddress'],
+                                     infos['KeysRecord']['contractAddress'],
+                                     infos['ProvedCRUD']['contractAddress'],
+                                     infos['FinaliseRecord']['contractAddress']])
+
 
 def undeploy(config_path=CONFIG_PATH):
     ''' Actually, smart contract cannot undeploy, but I need an function to remove unused intermediate file'''

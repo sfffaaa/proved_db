@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import {Strings} from "./strings.sol";
+import {Strings} from "./Strings.sol";
 import {Register} from "./Register.sol";
 import {KeysRecord} from "./KeysRecord.sol";
 import {ProvedCRUD} from "./ProvedCRUD.sol";

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import {Strings} from "./strings.sol";
+import {Strings} from "./Strings.sol";
 import {Register} from "./Register.sol";
 import {EventEmitter} from "./EventEmitter.sol";
 import {FinaliseRecordStorageInterface} from "./FinaliseRecordStorageInterface.sol";
@@ -12,12 +12,12 @@ contract FinaliseRecord {
 
 	Register _register;
 
-    constructor(uint submit_period,
+	constructor(uint submit_period,
 				address register_address)
 		public {
 		_submit_period = submit_period;
 		_register = Register(register_address);
-    }
+	}
 
 	function GetEventEmitter()
 		private
@@ -168,11 +168,11 @@ contract FinaliseRecord {
 		}
 	}
 
-    function Create(string input_key, string val) public {
+	function Create(string input_key, string val) public {
 		CreateUpdateBaseAction(input_key, val, "create");
-    }
+	}
 
-    function Update(string input_key, string val) public {
+	function Update(string input_key, string val) public {
 		CreateUpdateBaseAction(input_key, val, "update");
-    }
+	}
 }

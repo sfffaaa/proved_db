@@ -44,6 +44,30 @@ class RegisterOnChainHandler():
         print('==== get end ====')
         return address
 
+    def set_whitelist(self, address):
+        print('==== record start ====')
+        tx_hash = self._contract_inst.functions.SetWhitelist(address) \
+                                               .transact({'from': self._w3.eth.accounts[0],
+                                                          'gas': my_config.GAS_SPENT})
+        wait_miner(self._w3, tx_hash)
+        if check_transaction_meet_assert(self._w3, tx_hash):
+            raise IOError('assert encounter..')
+        print('==== record finish ====')
+
+    def set_multiple_whitelist(self, addresses):
+        print('==== record start ====')
+        tx_hashs = []
+        for address in addresses:
+            tx_hash = self._contract_inst.functions.SetWhitelist(address) \
+                                                   .transact({'from': self._w3.eth.accounts[0],
+                                                              'gas': my_config.GAS_SPENT})
+            tx_hashs.append(tx_hash)
+
+        wait_miner(self._w3, tx_hashs)
+        if check_transaction_meet_assert(self._w3, tx_hashs):
+            raise IOError('assert encounter..')
+        print('==== record finish ====')
+
 
 if __name__ == '__main__':
     pass

@@ -10,6 +10,36 @@ var KeysRecordStorageV0 = artifacts.require("./KeysRecordStorageV0");
 var ProvedCRUDStorageV0 = artifacts.require("./ProvedCRUDStorageV0");
 var Register = artifacts.require("./Register");
 
+function SetRegisterEntry(instance, allEntries) {
+    for (var i = 0; i < allEntries.length; i++) {
+        instance.SetInst(allEntries[i][0], allEntries[i][1]);
+    }
+};
+
+function SetRegisterWhitelist(instance, allowWhiteLists) {
+    for (var i = 0; i < allowWhiteLists.length; i++) {
+        instance.SetWhitelist(allowWhiteLists[i]);
+    }
+};
+
+async function SetAllRegisterRelatedInfo(instance) {
+    await SetRegisterEntry(instance,
+                           [["EventEmitter", EventEmitter.address],
+                            ["ProvedCRUDStorageInterface", ProvedCRUDStorageV0.address],
+                            ["KeysRecordStorageInterface", KeysRecordStorageV0.address],
+                            ["FinaliseRecordInterface", FinaliseRecordStorageV0.address],
+                            ["RecordHashStorageInterface", RecordHashStorageV0.address],
+                            ["KeysRecord", KeysRecord.address],
+                            ["ProvedCRUD", ProvedCRUD.address],
+                            ["FinaliseRecord", FinaliseRecord.address]]);
+
+    await SetRegisterWhitelist(instance,
+                               [RecordHash.address,
+                                ProvedDB.address,
+                                KeysRecord.address,
+                                ProvedCRUD.address,
+                                FinaliseRecord.address]);
+};
 
 module.exports = function(deployer) {
     var register_inst;
@@ -41,20 +71,6 @@ module.exports = function(deployer) {
         return deployer.deploy(RecordHash,
                                Register.address);
     }).then(function() {
-        return register_inst.SetInst("EventEmitter", EventEmitter.address);
-    }).then(function() {
-        return register_inst.SetInst("ProvedCRUDStorageInterface", ProvedCRUDStorageV0.address);
-    }).then(function() {
-        return register_inst.SetInst("KeysRecordStorageInterface", KeysRecordStorageV0.address);
-    }).then(function() {
-        return register_inst.SetInst("FinaliseRecordInterface", FinaliseRecordStorageV0.address);
-    }).then(function() {
-        return register_inst.SetInst("RecordHashStorageInterface", RecordHashStorageV0.address);
-    }).then(function() {
-        return register_inst.SetInst("KeysRecord", KeysRecord.address);
-    }).then(function() {
-        return register_inst.SetInst("ProvedCRUD", ProvedCRUD.address);
-    }).then(function() {
-        return register_inst.SetInst("FinaliseRecord", FinaliseRecord.address);
+        SetAllRegisterRelatedInfo(register_inst);
     });
 };
