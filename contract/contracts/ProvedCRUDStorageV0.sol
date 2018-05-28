@@ -1,5 +1,7 @@
 pragma solidity ^0.4.23;
 
+import {Register} from "./Register.sol";
+
 contract ProvedCRUDStorageV0 {
 	struct Entry {
 		string action;
@@ -11,7 +13,23 @@ contract ProvedCRUDStorageV0 {
 	}
 
     mapping(string => Record) _kv_hash_map;
-	function Create(string input_key, bytes32 hash) public {
+
+	Register _register;
+	constructor(address register_addr)
+		public
+	{
+		_register = Register(register_addr);
+	}
+
+	modifier onlyWhitelist() {
+		_register.CheckWhiltelist(msg.sender);
+		_;
+	}
+
+	function Create(string input_key, bytes32 hash)
+		public
+		onlyWhitelist
+	{
 		assert(false == _kv_hash_map[input_key].is_exist);
 
 		Entry memory entry = Entry("create", hash);
@@ -19,14 +37,21 @@ contract ProvedCRUDStorageV0 {
 		_kv_hash_map[input_key].entries.push(entry);
 	}
 
-	function Update(string input_key, bytes32 hash) public {
+	function Update(string input_key, bytes32 hash)
+		public
+		onlyWhitelist
+	{
 		assert(true == _kv_hash_map[input_key].is_exist);
 
 		Entry memory entry = Entry("update", hash);
 		_kv_hash_map[input_key].entries.push(entry);
     }
 
-    function Delete(string input_key) public returns (bool) {
+    function Delete(string input_key)
+		public
+		onlyWhitelist
+		returns (bool)	
+	{
 		if (false == _kv_hash_map[input_key].is_exist) {
 			return false;
 		}
@@ -35,7 +60,12 @@ contract ProvedCRUDStorageV0 {
 		return true;
 	}
 
-	function Retrieve(string input_key) public constant returns (bool exist, bytes32 data) {
+	function Retrieve(string input_key)
+		public
+		constant
+		onlyWhitelist
+		returns (bool exist, bytes32 data)
+	{
 		if (false == _kv_hash_map[input_key].is_exist) {
 			return (false, 0);
 		}

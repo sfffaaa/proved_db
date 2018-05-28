@@ -23,10 +23,17 @@ contract Whitelistable is Ownable {
 		require(false);
 		_;
 	}
+
 	modifier onlyWhitelist() {
-		//require(false);
-		//require(true == _whitelist_map[msg.sender]);
 		require(owner == msg.sender || true == _whitelist_map[msg.sender]);
 		_;
+	}
+
+	function CheckWhiltelist(address check_address)
+		public
+		view
+	{
+		require(owner == check_address ||
+				true == _whitelist_map[check_address]);
 	}
 }

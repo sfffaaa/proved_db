@@ -13,6 +13,11 @@ contract KeysRecord {
 		_register = Register(register_address);
 	}
 
+	modifier onlyWhitelist() {
+		_register.CheckWhiltelist(msg.sender);
+		_;
+	}
+
 	function GetStorageInterface()
 		private
 		view
@@ -20,34 +25,56 @@ contract KeysRecord {
 		return KeysRecordStorageInterface(_register.GetInst('KeysRecordStorageInterface'));
 	}
 
-    function Create(string input_key) public {
+    function Create(string input_key)
+		public
+		onlyWhitelist
+	{
 		GetStorageInterface().PushKeyRecord(input_key);
 	}
 
-	function NonExistedCheck(string input_key) public view {
+	function NonExistedCheck(string input_key)
+		public
+		view
+		onlyWhitelist
+	{
 		bool success;
 		uint idx;
 		(success, idx) = GetStorageInterface().GetKeyIdx(input_key);
 		assert(false == success);
 	}
 
-    function ExistedCheck(string input_key) public view {
+    function ExistedCheck(string input_key)
+		public
+		view
+		onlyWhitelist
+	{
 		bool success;
 		uint idx;
 		(success, idx) = GetStorageInterface().GetKeyIdx(input_key);
 		assert(true == success);
 	}
 
-    function Delete(string input_key) public {
+    function Delete(string input_key)
+		public
+		onlyWhitelist
+	{
 		ExistedCheck(input_key);
 		GetStorageInterface().DeleteKey(input_key);
 	}
 
-	function GetKeysLength() external view returns (uint) {
+	function GetKeysLength()
+		external
+		view
+		onlyWhitelist
+		returns (uint) {
 		return GetStorageInterface().GetKeysLength();
 	}
 
-	function GetKey(uint idx) external view returns (string) {
+	function GetKey(uint idx)
+		external
+		view
+		onlyWhitelist
+		returns (string) {
 		return GetStorageInterface().GetKey(idx);
 	}
 }

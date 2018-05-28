@@ -38,26 +38,34 @@ async function SetAllRegisterRelatedInfo(instance) {
                                 ProvedDB.address,
                                 KeysRecord.address,
                                 ProvedCRUD.address,
-                                FinaliseRecord.address]);
+                                FinaliseRecord.address,
+                                ProvedCRUDStorageV0.address,
+                                KeysRecordStorageV0.address,
+                                FinaliseRecordStorageV0.address,
+                                RecordHashStorageV0.address]);
 };
 
 module.exports = function(deployer) {
     var register_inst;
     deployer.deploy(Register).then(function(inst) {
         register_inst = inst;
-        return deployer.deploy(EventEmitter);
+        return deployer.deploy(EventEmitter,
+                               Register.address);
     }).then(function(inst) {
-        return deployer.deploy(ProvedCRUDStorageV0);
+        return deployer.deploy(ProvedCRUDStorageV0,
+                               Register.address);
     }).then(function() {
         return deployer.deploy(ProvedCRUD,
                                Register.address);
     }).then(function() {
-        return deployer.deploy(KeysRecordStorageV0);
+        return deployer.deploy(KeysRecordStorageV0,
+                               Register.address);
     }).then(function() {
         return deployer.deploy(KeysRecord,
                                Register.address);
     }).then(function() {
-        return deployer.deploy(FinaliseRecordStorageV0);
+        return deployer.deploy(FinaliseRecordStorageV0,
+                               Register.address);
     }).then(function() {
         return deployer.deploy(FinaliseRecord,
                                2,
@@ -66,7 +74,8 @@ module.exports = function(deployer) {
         return deployer.deploy(ProvedDB,
                                Register.address);
     }).then(function() {
-        return deployer.deploy(RecordHashStorageV0);
+        return deployer.deploy(RecordHashStorageV0,
+                               Register.address);
     }).then(function() {
         return deployer.deploy(RecordHash,
                                Register.address);

@@ -19,6 +19,11 @@ contract FinaliseRecord {
 		_register = Register(register_address);
 	}
 
+	modifier onlyWhitelist() {
+		_register.CheckWhiltelist(msg.sender);
+		_;
+	}
+
 	function GetEventEmitter()
 		private
 		view
@@ -67,7 +72,10 @@ contract FinaliseRecord {
 		return true;
 	}
 
-	function Finalise(bytes32 finalise_hash) public {
+	function Finalise(bytes32 finalise_hash)
+		public
+		onlyWhitelist
+	{
 		bool is_exist;
 		bool is_finalise;
 		uint length;
@@ -90,6 +98,7 @@ contract FinaliseRecord {
 	function GetFinalisedGroupEntriesLength(bytes32 kv_hash)
 		public
 		view
+		onlyWhitelist
 		returns (bool, uint) {
 		FinaliseRecordStorageInterface inst = GetStorageInterface();
 		bytes32 finalise_hash = inst.GetKV2FinalisedHashMap(kv_hash);
@@ -107,7 +116,11 @@ contract FinaliseRecord {
 		return (true, length);
 	}
 
-	function GetFinalisedGroupEntry(bytes32 kv_hash, uint idx) public view returns (bytes32) {
+	function GetFinalisedGroupEntry(bytes32 kv_hash, uint idx)
+		public
+		view
+		onlyWhitelist
+		returns (bytes32) {
 		FinaliseRecordStorageInterface inst = GetStorageInterface();
 		bytes32 finalise_hash = inst.GetKV2FinalisedHashMap(kv_hash);
 		assert(0 != uint(finalise_hash));
@@ -127,7 +140,11 @@ contract FinaliseRecord {
 		return hash_value;
 	}
 
-	function GetFinaliseEntriesLength(bytes32 finalise_hash) public view returns (bool, bool, uint) {
+	function GetFinaliseEntriesLength(bytes32 finalise_hash)
+		public
+		view
+		onlyWhitelist
+		returns (bool, bool, uint) {
 		bool is_exist;
 		bool is_finalise;
 		uint length;
@@ -142,7 +159,11 @@ contract FinaliseRecord {
 		return (true, true, length);
 	}
 
-	function GetFinaliseEntry(bytes32 finalise_hash, uint index) public view returns(bytes32) {
+	function GetFinaliseEntry(bytes32 finalise_hash, uint index)
+		public
+		view
+		onlyWhitelist
+		returns(bytes32) {
 		FinaliseRecordStorageInterface inst = GetStorageInterface();
 		bool is_exist;
 		bool is_finalise;
@@ -168,11 +189,17 @@ contract FinaliseRecord {
 		}
 	}
 
-	function Create(string input_key, string val) public {
+	function Create(string input_key, string val)
+		public
+		onlyWhitelist
+	{
 		CreateUpdateBaseAction(input_key, val, "create");
 	}
 
-	function Update(string input_key, string val) public {
+	function Update(string input_key, string val)
+		public
+		onlyWhitelist
+	{
 		CreateUpdateBaseAction(input_key, val, "update");
 	}
 }

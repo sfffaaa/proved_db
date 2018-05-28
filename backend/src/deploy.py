@@ -109,17 +109,17 @@ def _ComposeSmartContractArgs(config_handler, contract_name, my_args):
     elif contract_name == 'Register':
         return []
     elif contract_name == 'ProvedCRUDStorageV0':
-        return []
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'KeysRecordStorageV0':
-        return []
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'RecordHashStorageV0':
-        return []
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'EventEmitter':
-        return []
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'ProvedCRUD':
         return [my_args['Register']['contractAddress']]
     elif contract_name == 'FinaliseRecordStorageV0':
-        return []
+        return [my_args['Register']['contractAddress']]
     elif contract_name == 'RecordHash':
         return [my_args['Register']['contractAddress']]
     elif contract_name == 'KeysRecord':
@@ -175,15 +175,15 @@ def deploy(config_path=CONFIG_PATH):
     # step 2
     register_info = step_one_info['Register']
     infos = _DeployMultipleSmartContractV0(config_handler, {
-        'KeysRecordStorageV0': {},
+        'KeysRecordStorageV0': {'Register': register_info},
         'KeysRecord': {'Register': register_info},
-        'ProvedCRUDStorageV0': {},
+        'ProvedCRUDStorageV0': {'Register': register_info},
         'ProvedCRUD': {'Register': register_info},
-        'EventEmitter': {},
-        'FinaliseRecordStorageV0': {},
+        'EventEmitter': {'Register': register_info},
+        'FinaliseRecordStorageV0': {'Register': register_info},
         'FinaliseRecord': {'Register': register_info},
         'ProvedDB': {'Register': register_info},
-        'RecordHashStorageV0': {},
+        'RecordHashStorageV0': {'Register': register_info},
         'RecordHash': {'Register': register_info}
     })
 
@@ -205,7 +205,11 @@ def deploy(config_path=CONFIG_PATH):
                                      infos['ProvedDB']['contractAddress'],
                                      infos['KeysRecord']['contractAddress'],
                                      infos['ProvedCRUD']['contractAddress'],
-                                     infos['FinaliseRecord']['contractAddress']])
+                                     infos['FinaliseRecord']['contractAddress'],
+                                     infos['ProvedCRUDStorageV0']['contractAddress'],
+                                     infos['KeysRecordStorageV0']['contractAddress'],
+                                     infos['FinaliseRecordStorageV0']['contractAddress'],
+                                     infos['RecordHashStorageV0']['contractAddress']])
 
 
 def undeploy(config_path=CONFIG_PATH):

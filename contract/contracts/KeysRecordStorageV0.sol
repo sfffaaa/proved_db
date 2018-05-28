@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
 import {Strings} from "./Strings.sol";
-
+import {Register} from "./Register.sol";
 
 contract KeysRecordStorageV0 {
 
@@ -10,7 +10,24 @@ contract KeysRecordStorageV0 {
 	string[] _keys;
 	mapping(string => uint) _key_idxa1_map;
 
-    function PushKeyRecord(string input_key) external {
+	Register _register;
+
+	constructor(address register_address)
+		public
+	{
+		_register = Register(register_address);
+	}
+
+	modifier onlyWhitelist() {
+		_register.CheckWhiltelist(msg.sender);
+		_;
+	}
+
+
+    function PushKeyRecord(string input_key)
+		external
+		onlyWhitelist
+	{
 		assert(0 == _key_idxa1_map[input_key]);
 		_keys.push(input_key);
 		_key_idxa1_map[input_key] = _keys.length;
@@ -19,6 +36,7 @@ contract KeysRecordStorageV0 {
     function GetKeyIdx(string input_key)
 		external
 		view
+		onlyWhitelist
 		returns (bool, uint) {
 		if (0 == _key_idxa1_map[input_key]) {
 			return (false, 0);
@@ -28,7 +46,10 @@ contract KeysRecordStorageV0 {
 		}
 	}
 
-    function DeleteKey(string input_key) external {
+    function DeleteKey(string input_key)
+		external
+		onlyWhitelist
+	{
 		if (0 == _key_idxa1_map[input_key]) {
 			return;
 		}
@@ -44,11 +65,21 @@ contract KeysRecordStorageV0 {
 		_keys.length--;
 	}
 
-	function GetKeysLength() external view returns (uint) {
+	function GetKeysLength()
+		external
+		view
+		onlyWhitelist
+		returns (uint)
+	{
 		return _keys.length;
 	}
 
-	function GetKey(uint idx) external view returns (string) {
+	function GetKey(uint idx)
+		external
+		view
+		onlyWhitelist
+		returns (string)
+	{
 		return _keys[idx];
 	}
 }
