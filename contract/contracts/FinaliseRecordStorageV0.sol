@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Register} from "./Register.sol";
 
@@ -12,7 +12,7 @@ contract FinaliseRecordStorageV0 {
 		bool is_exist;
 		Entry entry;
 	}
-	SubmitEntry[] _submit_list;
+	SubmitEntry[] private _submit_list;
 
 	struct FinaliseEntry {
 		bool is_exist;
@@ -20,12 +20,12 @@ contract FinaliseRecordStorageV0 {
 		Entry[] entries;
 	}
 
-	mapping(bytes32 => FinaliseEntry) _finalize_hash_map;
+	mapping(bytes32 => FinaliseEntry) private _finalize_hash_map;
 
 	//reverse find finalise group
-	mapping(bytes32 => bytes32) _kv_hash_to_finalised_hash_map;
+	mapping(bytes32 => bytes32) private _kv_hash_to_finalised_hash_map;
 
-	Register _register;
+	Register private _register;
 	
 	constructor(address register_address)
 		public
@@ -49,7 +49,7 @@ contract FinaliseRecordStorageV0 {
 		external
 		onlyWhitelist
 	{
-		_submit_list.length = 0;
+		delete _submit_list;
 	}
 	function PushSubmitEntry(string action, bytes32 hash_value)
 		external

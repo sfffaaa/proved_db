@@ -1,11 +1,11 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Register} from "./Register.sol";
 
 contract RecordHashStorageV0 {
-    mapping(bytes32 => bool) _record_map;
+    mapping(bytes32 => bool) private _record_map;
 
-	Register _register;
+	Register private _register;
 	constructor(address register_addr)
 		public
 	{

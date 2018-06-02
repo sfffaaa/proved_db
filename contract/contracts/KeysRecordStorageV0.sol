@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Strings} from "./Strings.sol";
 import {Register} from "./Register.sol";
@@ -7,10 +7,10 @@ contract KeysRecordStorageV0 {
 
 	using Strings for string;
 
-	string[] _keys;
-	mapping(string => uint) _key_idxa1_map;
+	string[] private _keys;
+	mapping(string => uint) private _key_idxa1_map;
 
-	Register _register;
+	Register private _register;
 
 	constructor(address register_address)
 		public

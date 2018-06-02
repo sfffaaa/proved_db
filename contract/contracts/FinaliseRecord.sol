@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Strings} from "./Strings.sol";
 import {Register} from "./Register.sol";
@@ -8,9 +8,9 @@ import {FinaliseRecordStorageInterface} from "./FinaliseRecordStorageInterface.s
 contract FinaliseRecord {
 	using Strings for string;
 
-	uint _submit_period;
+	uint private _submit_period;
 
-	Register _register;
+	Register private _register;
 
 	constructor(uint submit_period,
 				address register_address)

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Strings} from "./Strings.sol";
 import {Register} from "./Register.sol";
@@ -9,7 +9,7 @@ import {FinaliseRecord} from "./FinaliseRecord.sol";
 
 contract ProvedDB {
 
-	Register _register;
+	Register private _register;
 
     constructor(address register_address)
 	public {

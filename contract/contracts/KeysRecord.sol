@@ -1,11 +1,11 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {KeysRecordStorageInterface} from "./KeysRecordStorageInterface.sol";
 import {Register} from "./Register.sol";
 
 contract KeysRecord {
 
-	Register _register;
+	Register private _register;
 
 	constructor(address register_address)
 		public

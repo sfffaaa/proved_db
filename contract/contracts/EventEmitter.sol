@@ -1,10 +1,10 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Register} from "./Register.sol";
 
 contract EventEmitter {
 
-	Register _register;
+	Register private _register;
 
 	event submit_hash(bytes32 finalise_hash);
 	event record_over(bytes32 finalise_hash);

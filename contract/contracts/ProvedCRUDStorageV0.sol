@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.24;
 
 import {Register} from "./Register.sol";
 
@@ -12,9 +12,9 @@ contract ProvedCRUDStorageV0 {
 		Entry[] entries;
 	}
 
-    mapping(string => Record) _kv_hash_map;
+    mapping(string => Record) private _kv_hash_map;
 
-	Register _register;
+	Register private _register;
 	constructor(address register_addr)
 		public
 	{
@@ -62,7 +62,7 @@ contract ProvedCRUDStorageV0 {
 
 	function Retrieve(string input_key)
 		public
-		constant
+		view
 		onlyWhitelist
 		returns (bool exist, bytes32 data)
 	{
